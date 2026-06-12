@@ -380,87 +380,278 @@ Mission Control out.`,
             ctx.fillStyle = aGrad;
             ctx.fillRect(i, auroraY + wave - 8, 3, 16);
         }
+
+        // Second aurora band — slightly different frequency, greenish tint
+        const aurora2Y = canvas.height * 0.08;
+        const aurora2A = 0.035 + Math.sin(time * 0.0009 + 1.8) * 0.018;
+        for (let i = 0; i < canvas.width; i += 5) {
+            const wave2 = Math.sin(i * 0.007 + time * 0.00075) * 9;
+            const a2Grad = ctx.createLinearGradient(i, aurora2Y + wave2 - 6, i, aurora2Y + wave2 + 6);
+            a2Grad.addColorStop(0, 'transparent');
+            a2Grad.addColorStop(0.5, `rgba(80, 220, 200, ${aurora2A})`);
+            a2Grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = a2Grad;
+            ctx.fillRect(i, aurora2Y + wave2 - 6, 4, 12);
+        }
+
+        // Ice plate background geometry — faint distant ridge network
+        for (let ip = 0; ip < 6; ip++) {
+            const ipX = (ip * 157 + this.distance * 0.12) % (canvas.width + 80) - 40;
+            const ipY = this.groundY - 25 - (ip % 3) * 18;
+            const ipA = 0.05 + (ip % 4) * 0.018;
+            ctx.strokeStyle = `rgba(160, 190, 220, ${ipA})`;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(ipX, ipY + 20);
+            ctx.lineTo(ipX + 12, ipY);
+            ctx.lineTo(ipX + 28, ipY + 8);
+            ctx.lineTo(ipX + 40, ipY + 3);
+            ctx.stroke();
+        }
+
+        // Tidal flexing ground shudder glow — very subtle pulse at horizon
+        const tidePulse = 0.04 + Math.sin(time * 0.00035) * 0.025;
+        const tideGrad = ctx.createLinearGradient(0, this.groundY - 30, 0, this.groundY + 10);
+        tideGrad.addColorStop(0, 'transparent');
+        tideGrad.addColorStop(0.6, `rgba(0, 80, 160, ${tidePulse})`);
+        tideGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = tideGrad;
+        ctx.fillRect(0, this.groundY - 30, canvas.width, 40);
     },
 
     renderObstacle(obs) {
         const ctx = this.ctx;
+        const t = Date.now();
 
         if (obs.type === 'ice_ridge') {
-            const grad = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y + obs.height);
-            grad.addColorStop(0, '#e8f4fc');
-            grad.addColorStop(0.4, '#c0d8ec');
-            grad.addColorStop(1, '#90b0c8');
-            ctx.fillStyle = grad;
+            // Ridge silhouette with multiple facets
+            const pts = [
+                [obs.x, obs.y + obs.height],
+                [obs.x + obs.width * 0.12, obs.y + obs.height * 0.55],
+                [obs.x + obs.width * 0.28, obs.y + obs.height * 0.15],
+                [obs.x + obs.width * 0.42, obs.y],
+                [obs.x + obs.width * 0.55, obs.y + obs.height * 0.08],
+                [obs.x + obs.width * 0.7, obs.y - obs.height * 0.06],
+                [obs.x + obs.width * 0.82, obs.y + obs.height * 0.12],
+                [obs.x + obs.width, obs.y + obs.height],
+            ];
+
+            // Shadow/base fill
+            const baseGrad = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y + obs.height);
+            baseGrad.addColorStop(0, '#b8d8f0');
+            baseGrad.addColorStop(0.3, '#98c4e8');
+            baseGrad.addColorStop(0.65, '#70a8d0');
+            baseGrad.addColorStop(1, '#4880b0');
+            ctx.fillStyle = baseGrad;
             ctx.beginPath();
-            ctx.moveTo(obs.x, obs.y + obs.height);
-            ctx.lineTo(obs.x + obs.width * 0.25, obs.y);
-            ctx.lineTo(obs.x + obs.width * 0.55, obs.y + 8);
-            ctx.lineTo(obs.x + obs.width * 0.75, obs.y - 4);
-            ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+            pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
             ctx.closePath();
             ctx.fill();
-            // Highlight edge
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+
+            // Facet shading — left dark, right lit
+            ctx.fillStyle = 'rgba(20, 40, 80, 0.25)';
+            ctx.beginPath();
+            ctx.moveTo(pts[0][0], pts[0][1]);
+            ctx.lineTo(pts[2][0], pts[2][1]);
+            ctx.lineTo(pts[3][0], pts[3][1]);
+            ctx.lineTo(pts[0][0], pts[0][1]);
+            ctx.fill();
+
+            // Subsurface blue glow — Jupiter light refracting through ice
+            const iceGlow = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width * 0.5, obs.y + obs.height);
+            iceGlow.addColorStop(0, 'rgba(100, 180, 255, 0.18)');
+            iceGlow.addColorStop(1, 'rgba(40, 100, 200, 0.06)');
+            ctx.fillStyle = iceGlow;
+            ctx.beginPath();
+            pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.closePath();
+            ctx.fill();
+
+            // Sharp bright highlight on windward faces
+            ctx.strokeStyle = 'rgba(240, 252, 255, 0.85)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(obs.x, obs.y + obs.height);
-            ctx.lineTo(obs.x + obs.width * 0.25, obs.y);
+            ctx.moveTo(pts[0][0], pts[0][1]);
+            ctx.lineTo(pts[2][0], pts[2][1]);
+            ctx.lineTo(pts[3][0], pts[3][1]);
             ctx.stroke();
-            // Brown crack line
-            ctx.strokeStyle = 'rgba(120, 80, 50, 0.6)';
+            ctx.strokeStyle = 'rgba(200, 235, 255, 0.55)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(obs.x + obs.width * 0.4, obs.y + 4);
-            ctx.lineTo(obs.x + obs.width * 0.6, obs.y + obs.height);
+            ctx.moveTo(pts[4][0], pts[4][1]);
+            ctx.lineTo(pts[5][0], pts[5][1]);
+            ctx.lineTo(pts[6][0], pts[6][1]);
             ctx.stroke();
 
+            // Brown tholins crack line (Europa's characteristic markings)
+            ctx.strokeStyle = 'rgba(110, 65, 35, 0.7)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(pts[3][0], pts[3][1]);
+            ctx.bezierCurveTo(
+                pts[3][0] + obs.width * 0.08, pts[3][1] + obs.height * 0.25,
+                pts[3][0] + obs.width * 0.12, pts[3][1] + obs.height * 0.55,
+                obs.x + obs.width * 0.5, obs.y + obs.height
+            );
+            ctx.stroke();
+
+            // Frost glint sparkle at tip
+            const tipX = pts[5][0], tipY = pts[5][1];
+            const sparkA = 0.3 + Math.sin(t * 0.005 + obs.x * 0.01) * 0.25;
+            const spk = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 10);
+            spk.addColorStop(0, `rgba(255, 255, 255, ${sparkA})`);
+            spk.addColorStop(1, 'transparent');
+            ctx.fillStyle = spk;
+            ctx.fillRect(tipX - 10, tipY - 10, 20, 20);
+
         } else if (obs.type === 'crack_gap') {
-            // Dark gap through ice to ocean below
-            ctx.fillStyle = '#040810';
-            ctx.fillRect(obs.x, obs.y, obs.width, 50);
-            // Ocean blue glow at depth
-            const oceanGrad = ctx.createLinearGradient(obs.x, obs.y, obs.x, obs.y + 40);
-            oceanGrad.addColorStop(0, 'rgba(0, 40, 80, 0.95)');
-            oceanGrad.addColorStop(0.5, 'rgba(0, 60, 120, 0.8)');
-            oceanGrad.addColorStop(1, 'rgba(0, 30, 70, 0.95)');
+            const lTime = t * 0.001;
+
+            // Ice wall sides — visible fissure depth
+            const leftWall = ctx.createLinearGradient(obs.x, 0, obs.x + 10, 0);
+            leftWall.addColorStop(0, '#cce4f5');
+            leftWall.addColorStop(1, '#6090b8');
+            ctx.fillStyle = leftWall;
+            ctx.beginPath();
+            ctx.moveTo(obs.x, obs.y);
+            ctx.lineTo(obs.x - 5, obs.y + 10);
+            ctx.lineTo(obs.x - 5, obs.y + 50);
+            ctx.lineTo(obs.x, obs.y + 50);
+            ctx.closePath();
+            ctx.fill();
+            const rightWall = ctx.createLinearGradient(obs.x + obs.width - 10, 0, obs.x + obs.width, 0);
+            rightWall.addColorStop(0, '#6090b8');
+            rightWall.addColorStop(1, '#cce4f5');
+            ctx.fillStyle = rightWall;
+            ctx.beginPath();
+            ctx.moveTo(obs.x + obs.width, obs.y);
+            ctx.lineTo(obs.x + obs.width + 5, obs.y + 10);
+            ctx.lineTo(obs.x + obs.width + 5, obs.y + 50);
+            ctx.lineTo(obs.x + obs.width, obs.y + 50);
+            ctx.closePath();
+            ctx.fill();
+
+            // Deep void
+            ctx.fillStyle = '#020408';
+            ctx.fillRect(obs.x, obs.y, obs.width, 55);
+
+            // Subsurface ocean — layered deep blue
+            const oceanGrad = ctx.createLinearGradient(obs.x, obs.y + 5, obs.x, obs.y + 40);
+            oceanGrad.addColorStop(0, 'rgba(0, 60, 130, 0.9)');
+            oceanGrad.addColorStop(0.4, 'rgba(0, 90, 170, 0.85)');
+            oceanGrad.addColorStop(1, 'rgba(0, 40, 100, 0.95)');
             ctx.fillStyle = oceanGrad;
-            ctx.fillRect(obs.x, obs.y, obs.width, 30);
-            // Shimmer
-            ctx.fillStyle = 'rgba(100, 180, 255, 0.2)';
-            ctx.fillRect(obs.x + obs.width * 0.2, obs.y + 4, obs.width * 0.3, 3);
-            // Crack edge detail on both sides
-            ctx.strokeStyle = 'rgba(120, 80, 50, 0.7)';
+            ctx.fillRect(obs.x, obs.y + 8, obs.width, 32);
+
+            // Animated water shimmer
+            for (let w = 0; w < 3; w++) {
+                const wx = obs.x + obs.width * (0.1 + w * 0.3 + Math.sin(lTime * 1.1 + w) * 0.07);
+                const ww = obs.width * 0.15;
+                ctx.fillStyle = `rgba(120, 200, 255, ${0.18 + Math.sin(lTime * 1.8 + w * 1.4) * 0.08})`;
+                ctx.fillRect(wx, obs.y + 14, ww, 2);
+            }
+
+            // Frost crystals on rim
+            ctx.strokeStyle = 'rgba(200, 230, 255, 0.6)';
+            ctx.lineWidth = 1;
+            for (let f = 0; f < 5; f++) {
+                const fx = obs.x + obs.width * (0.1 + f * 0.2);
+                ctx.beginPath();
+                ctx.moveTo(fx - 3, obs.y - 2);
+                ctx.lineTo(fx, obs.y - 7);
+                ctx.lineTo(fx + 3, obs.y - 2);
+                ctx.stroke();
+            }
+
+            // Brown tholins at the crack edge
+            ctx.strokeStyle = 'rgba(130, 85, 45, 0.8)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(obs.x, obs.y);
             ctx.lineTo(obs.x + obs.width, obs.y);
             ctx.stroke();
-            // Ice edge highlight
-            ctx.strokeStyle = 'rgba(220, 240, 255, 0.5)';
+
+            // Ice shelf highlight
+            ctx.strokeStyle = 'rgba(230, 248, 255, 0.55)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(obs.x + 1, obs.y);
-            ctx.lineTo(obs.x + obs.width - 1, obs.y);
+            ctx.moveTo(obs.x + 1, obs.y - 1);
+            ctx.lineTo(obs.x + obs.width - 1, obs.y - 1);
             ctx.stroke();
+
+            // Steam rising from warm ocean below
+            for (let s = 0; s < 4; s++) {
+                const sx = obs.x + obs.width * (0.15 + s * 0.24);
+                const rise = ((lTime * 15 + s * 7) % 28);
+                ctx.strokeStyle = `rgba(180, 220, 255, ${0.15 - rise * 0.004})`;
+                ctx.lineWidth = 0.8;
+                ctx.beginPath();
+                ctx.moveTo(sx, obs.y - rise * 0.3);
+                ctx.bezierCurveTo(sx + 3, obs.y - rise * 0.6, sx - 2, obs.y - rise * 0.9, sx + 1, obs.y - rise * 1.2);
+                ctx.stroke();
+            }
 
         } else if (obs.type === 'ice_shard') {
             ctx.save();
             ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
             ctx.rotate(obs.rotation);
-            const shardGrad = ctx.createLinearGradient(-obs.width / 2, -obs.height / 2, obs.width / 2, obs.height / 2);
-            shardGrad.addColorStop(0, 'rgba(220, 240, 255, 0.9)');
-            shardGrad.addColorStop(0.5, 'rgba(180, 215, 240, 0.85)');
-            shardGrad.addColorStop(1, 'rgba(140, 190, 220, 0.8)');
-            ctx.fillStyle = shardGrad;
+
+            const hw = obs.width / 2;
+            const hh = obs.height / 2;
+
+            // Outer glow — ice catching light
+            const shardGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, hw * 1.8);
+            shardGlow.addColorStop(0, 'rgba(180, 220, 255, 0.2)');
+            shardGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = shardGlow;
+            ctx.fillRect(-hw * 1.8, -hh * 1.8, hw * 3.6, hh * 3.6);
+
+            // Main crystal shard — elongated hexagonal
+            const pts2 = [
+                [0, -hh],
+                [hw * 0.55, -hh * 0.3],
+                [hw * 0.4, hh * 0.7],
+                [hw * 0.1, hh],
+                [-hw * 0.4, hh * 0.6],
+                [-hw * 0.5, -hh * 0.25],
+            ];
             ctx.beginPath();
-            ctx.moveTo(0, -obs.height / 2);
-            ctx.lineTo(obs.width / 2, obs.height / 2);
-            ctx.lineTo(-obs.width / 2 + 4, obs.height / 2 - 4);
+            pts2.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.closePath();
+            const crystalGrad = ctx.createLinearGradient(-hw, -hh, hw, hh);
+            crystalGrad.addColorStop(0, 'rgba(230, 248, 255, 0.95)');
+            crystalGrad.addColorStop(0.3, 'rgba(185, 225, 250, 0.88)');
+            crystalGrad.addColorStop(0.7, 'rgba(130, 185, 230, 0.82)');
+            crystalGrad.addColorStop(1, 'rgba(80, 140, 200, 0.75)');
+            ctx.fillStyle = crystalGrad;
+            ctx.fill();
+
+            // Internal refraction plane
+            ctx.fillStyle = 'rgba(100, 180, 255, 0.18)';
+            ctx.beginPath();
+            ctx.moveTo(0, -hh);
+            ctx.lineTo(hw * 0.55, -hh * 0.3);
+            ctx.lineTo(hw * 0.1, hh * 0.1);
             ctx.closePath();
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+
+            // Bright specular highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(-hw * 0.05, -hh * 0.95);
+            ctx.lineTo(hw * 0.15, -hh * 0.5);
+            ctx.lineTo(-hw * 0.12, -hh * 0.45);
+            ctx.closePath();
+            ctx.fill();
+
+            // Edge outline
+            ctx.strokeStyle = 'rgba(200, 235, 255, 0.8)';
             ctx.lineWidth = 1;
+            ctx.beginPath();
+            pts2.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.closePath();
             ctx.stroke();
+
             ctx.restore();
         }
     },

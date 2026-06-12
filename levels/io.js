@@ -324,6 +324,44 @@ Mission Control out.`,
             ctx.fillRect(hx - 1, this.groundY - hh, 2, hh);
         }
         ctx.restore();
+
+        // Sulfur plume rising in background — tall column drifting
+        for (let pl = 0; pl < 2; pl++) {
+            const plX = canvas.width * (0.15 + pl * 0.6);
+            const plH = canvas.height * 0.55;
+            const sway = Math.sin(time * 0.0004 + pl * 2.1) * 18;
+            for (let seg = 0; seg < 8; seg++) {
+                const sy = this.groundY - seg * (plH / 8);
+                const sw = (8 - seg) * 7 + 10;
+                const sa = (0.06 - seg * 0.006) * (0.7 + Math.sin(time * 0.0007 + pl + seg) * 0.3);
+                if (sa <= 0) break;
+                const plumeGrad = ctx.createRadialGradient(plX + sway * (seg / 8), sy, 0, plX + sway * (seg / 8), sy, sw);
+                plumeGrad.addColorStop(0, `rgba(220, 190, 80, ${sa})`);
+                plumeGrad.addColorStop(0.6, `rgba(190, 140, 40, ${sa * 0.5})`);
+                plumeGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = plumeGrad;
+                ctx.fillRect(plX + sway * (seg / 8) - sw, sy - sw * 0.5, sw * 2, sw);
+            }
+        }
+
+        // Ground lava rivulets — bright glowing threads on the surface
+        for (let rv = 0; rv < 4; rv++) {
+            const rx = (rv * 183 + this.distance * 0.55) % canvas.width;
+            const rvAlpha = 0.25 + Math.sin(time * 0.002 + rv * 1.5) * 0.12;
+            ctx.strokeStyle = `rgba(255, ${120 + rv * 15}, 0, ${rvAlpha})`;
+            ctx.lineWidth = 1 + (rv % 2) * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(rx, this.groundY + 6 + rv * 3);
+            ctx.bezierCurveTo(rx - 20, this.groundY + 10 + rv * 3, rx + 30, this.groundY + 12 + rv * 3, rx + 50, this.groundY + 8 + rv * 3);
+            ctx.stroke();
+        }
+
+        // Atmospheric SO2 tint — faint orange gradient across whole sky
+        const atmoGrad = ctx.createLinearGradient(0, 0, 0, this.groundY * 0.7);
+        atmoGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        atmoGrad.addColorStop(1, `rgba(80, 30, 0, ${0.06 + Math.sin(time * 0.0005) * 0.02})`);
+        ctx.fillStyle = atmoGrad;
+        ctx.fillRect(0, 0, canvas.width, this.groundY * 0.7);
     },
 
     renderPlains(plains, baseColor, glowColor, opacity) {
@@ -362,64 +400,185 @@ Mission Control out.`,
 
     renderObstacle(obs) {
         const ctx = this.ctx;
+        const t = Date.now();
 
         if (obs.type === 'lava_jet') {
             const x = obs.x + obs.width / 2;
             const topY = obs.y + (obs.height - obs.jetHeight);
+            const halfW = obs.width / 2;
 
-            // Glow halo at base
-            const baseGlow = ctx.createRadialGradient(x, this.groundY, 0, x, this.groundY, 40);
-            baseGlow.addColorStop(0, 'rgba(255, 120, 0, 0.5)');
-            baseGlow.addColorStop(0.5, 'rgba(255, 80, 0, 0.2)');
+            // Ground vent caldera — dark oval crater mouth
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(x, this.groundY + 4, halfW + 6, 7, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#0a0400';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(180, 60, 0, 0.7)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+
+            // Wide ground glow radiating from vent
+            const baseGlow = ctx.createRadialGradient(x, this.groundY, 0, x, this.groundY, 70);
+            baseGlow.addColorStop(0, 'rgba(255, 140, 0, 0.55)');
+            baseGlow.addColorStop(0.4, 'rgba(255, 60, 0, 0.22)');
             baseGlow.addColorStop(1, 'transparent');
             ctx.fillStyle = baseGlow;
-            ctx.fillRect(x - 40, this.groundY - 40, 80, 60);
+            ctx.fillRect(x - 70, this.groundY - 55, 140, 75);
 
-            // Jet column
-            const jetGrad = ctx.createLinearGradient(x - obs.width / 2, topY, x + obs.width / 2, topY);
-            jetGrad.addColorStop(0, 'rgba(255, 200, 0, 0.3)');
-            jetGrad.addColorStop(0.5, 'rgba(255, 100, 0, 0.9)');
-            jetGrad.addColorStop(1, 'rgba(255, 200, 0, 0.3)');
+            // Outer diffuse column
+            const outerGrad = ctx.createLinearGradient(x - halfW * 2.5, 0, x + halfW * 2.5, 0);
+            outerGrad.addColorStop(0, 'transparent');
+            outerGrad.addColorStop(0.4, `rgba(255, 80, 0, ${0.12 + Math.sin(obs.phase) * 0.06})`);
+            outerGrad.addColorStop(0.6, `rgba(255, 80, 0, ${0.12 + Math.sin(obs.phase) * 0.06})`);
+            outerGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = outerGrad;
+            ctx.fillRect(x - halfW * 2.5, topY + obs.jetHeight * 0.3, halfW * 5, obs.jetHeight * 0.7);
+
+            // Main jet column — tapered path (wide at base, narrow at tip)
+            ctx.beginPath();
+            ctx.moveTo(x - halfW, this.groundY);
+            ctx.quadraticCurveTo(x - halfW * 1.1, topY + obs.jetHeight * 0.5, x - halfW * 0.45, topY);
+            ctx.lineTo(x + halfW * 0.45, topY);
+            ctx.quadraticCurveTo(x + halfW * 1.1, topY + obs.jetHeight * 0.5, x + halfW, this.groundY);
+            ctx.closePath();
+            const jetGrad = ctx.createLinearGradient(0, this.groundY, 0, topY);
+            jetGrad.addColorStop(0, 'rgba(255, 200, 20, 0.95)');
+            jetGrad.addColorStop(0.35, 'rgba(255, 100, 0, 0.88)');
+            jetGrad.addColorStop(0.75, 'rgba(220, 40, 0, 0.7)');
+            jetGrad.addColorStop(1, 'rgba(180, 20, 0, 0.4)');
             ctx.fillStyle = jetGrad;
-            ctx.fillRect(obs.x, topY, obs.width, obs.jetHeight);
+            ctx.fill();
 
-            // Core bright streak
-            ctx.fillStyle = 'rgba(255, 240, 180, 0.85)';
-            ctx.fillRect(x - 3, topY, 6, obs.jetHeight);
+            // Hot bright core streak
+            const coreGrad = ctx.createLinearGradient(0, this.groundY, 0, topY);
+            coreGrad.addColorStop(0, 'rgba(255, 255, 220, 0.95)');
+            coreGrad.addColorStop(0.5, 'rgba(255, 220, 100, 0.7)');
+            coreGrad.addColorStop(1, 'rgba(255, 180, 50, 0.2)');
+            ctx.fillStyle = coreGrad;
+            ctx.fillRect(x - 2, topY, 4, obs.jetHeight);
 
-            // Tip glow
-            const tipGlow = ctx.createRadialGradient(x, topY, 0, x, topY, 20);
-            tipGlow.addColorStop(0, 'rgba(255, 255, 200, 0.7)');
+            // Flame tongue fringe — wiggly edges
+            ctx.save();
+            ctx.globalAlpha = 0.5 + Math.sin(obs.phase * 2) * 0.15;
+            for (let f = 0; f < 5; f++) {
+                const fy = topY + obs.jetHeight * (0.1 + f * 0.18);
+                const fw = (halfW + 4) * (1 - f * 0.1) * (0.8 + Math.sin(obs.phase + f) * 0.2);
+                ctx.fillStyle = `rgba(255, ${120 + f * 15}, 0, ${0.18 - f * 0.02})`;
+                ctx.beginPath();
+                ctx.ellipse(x, fy, fw, 3 + f, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // Tip explosion burst
+            const tipGlow = ctx.createRadialGradient(x, topY, 0, x, topY, 28);
+            tipGlow.addColorStop(0, `rgba(255, 255, 200, ${0.75 + Math.sin(obs.phase * 3) * 0.2})`);
+            tipGlow.addColorStop(0.4, `rgba(255, 160, 30, 0.4)`);
             tipGlow.addColorStop(1, 'transparent');
             ctx.fillStyle = tipGlow;
-            ctx.fillRect(x - 20, topY - 20, 40, 40);
+            ctx.fillRect(x - 30, topY - 28, 60, 56);
+
+            // Ember sparks spraying from tip
+            for (let e = 0; e < 6; e++) {
+                const ex = x + Math.sin(obs.phase * 2 + e * 1.1) * (8 + e * 3);
+                const ey = topY - 5 - e * 4 + Math.cos(t * 0.004 + e) * 4;
+                ctx.beginPath();
+                ctx.arc(ex, ey, 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, ${180 + e * 10}, 0, ${0.6 - e * 0.08})`;
+                ctx.fill();
+            }
 
         } else if (obs.type === 'lava_flow') {
-            // Pit filled with glowing lava
-            ctx.fillStyle = '#100800';
-            ctx.fillRect(obs.x, obs.y, obs.width, 50);
+            const lTime = t * 0.001;
+            // Fissure walls — dark rocky sides
+            ctx.fillStyle = '#0c0602';
+            ctx.beginPath();
+            ctx.moveTo(obs.x - 4, obs.y);
+            ctx.lineTo(obs.x, obs.y - 6);
+            ctx.lineTo(obs.x, obs.y + 55);
+            ctx.lineTo(obs.x - 4, obs.y + 55);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(obs.x + obs.width + 4, obs.y);
+            ctx.lineTo(obs.x + obs.width, obs.y - 6);
+            ctx.lineTo(obs.x + obs.width, obs.y + 55);
+            ctx.lineTo(obs.x + obs.width + 4, obs.y + 55);
+            ctx.closePath();
+            ctx.fill();
 
+            // Deep pit
+            ctx.fillStyle = '#060300';
+            ctx.fillRect(obs.x, obs.y, obs.width, 55);
+
+            // Molten lava surface — radial hot centre
             const lavaGrad = ctx.createRadialGradient(
-                obs.x + obs.width / 2, obs.y + 8, 0,
-                obs.x + obs.width / 2, obs.y + 8, obs.width / 2
+                obs.x + obs.width * 0.5, obs.y + 6, 2,
+                obs.x + obs.width * 0.5, obs.y + 10, obs.width * 0.65
             );
-            lavaGrad.addColorStop(0, 'rgba(255, 180, 0, 0.95)');
-            lavaGrad.addColorStop(0.4, 'rgba(255, 80, 0, 0.9)');
-            lavaGrad.addColorStop(1, 'rgba(150, 20, 0, 0.8)');
+            lavaGrad.addColorStop(0, 'rgba(255, 220, 60, 0.98)');
+            lavaGrad.addColorStop(0.25, 'rgba(255, 120, 0, 0.95)');
+            lavaGrad.addColorStop(0.65, 'rgba(200, 40, 0, 0.9)');
+            lavaGrad.addColorStop(1, 'rgba(80, 10, 0, 0.85)');
             ctx.fillStyle = lavaGrad;
-            ctx.fillRect(obs.x, obs.y, obs.width, 20);
+            ctx.fillRect(obs.x, obs.y, obs.width, 22);
 
-            // Surface shimmer
-            ctx.fillStyle = 'rgba(255, 220, 100, 0.4)';
-            ctx.fillRect(obs.x + obs.width * 0.15, obs.y + 2, obs.width * 0.35, 4);
-            ctx.fillRect(obs.x + obs.width * 0.55, obs.y + 5, obs.width * 0.2, 3);
+            // Cooling crust plates drifting across surface
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(obs.x, obs.y, obs.width, 22);
+            ctx.clip();
+            for (let c = 0; c < 4; c++) {
+                const cx = obs.x + ((obs.width * 0.18 * c + lTime * 12 * (c % 2 === 0 ? 1 : -0.7)) % (obs.width + 20)) - 5;
+                const cw = obs.width * 0.14 + c * 4;
+                ctx.fillStyle = `rgba(30, 15, 5, ${0.55 + c * 0.05})`;
+                ctx.beginPath();
+                ctx.moveTo(cx, obs.y + 3);
+                ctx.lineTo(cx + cw, obs.y + 4);
+                ctx.lineTo(cx + cw - 3, obs.y + 12);
+                ctx.lineTo(cx + 2, obs.y + 11);
+                ctx.closePath();
+                ctx.fill();
+                // Bright crack edge around crust
+                ctx.strokeStyle = `rgba(255, 160, 30, 0.5)`;
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+            }
+            ctx.restore();
 
-            // Edge glow
-            const edgeGlow = ctx.createLinearGradient(obs.x, obs.y - 10, obs.x, obs.y + 5);
-            edgeGlow.addColorStop(0, 'transparent');
-            edgeGlow.addColorStop(1, 'rgba(255, 80, 0, 0.3)');
-            ctx.fillStyle = edgeGlow;
-            ctx.fillRect(obs.x - 10, obs.y - 10, obs.width + 20, 15);
+            // Bright lava shimmer moving highlight
+            const shimX = obs.x + obs.width * (0.3 + Math.sin(lTime * 1.2) * 0.2);
+            ctx.fillStyle = 'rgba(255, 230, 100, 0.45)';
+            ctx.fillRect(shimX, obs.y + 1, obs.width * 0.22, 4);
+
+            // Rim glow above surface — heat rising
+            const rimGlow = ctx.createLinearGradient(obs.x, obs.y - 18, obs.x, obs.y + 5);
+            rimGlow.addColorStop(0, 'transparent');
+            rimGlow.addColorStop(0.6, `rgba(255, 80, 0, ${0.18 + Math.sin(lTime * 0.8) * 0.05})`);
+            rimGlow.addColorStop(1, 'rgba(255, 100, 0, 0.08)');
+            ctx.fillStyle = rimGlow;
+            ctx.fillRect(obs.x - 8, obs.y - 18, obs.width + 16, 23);
+
+            // Rim highlight — lava edge
+            ctx.strokeStyle = `rgba(255, ${160 + Math.sin(lTime * 2) * 40}, 0, 0.85)`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(obs.x, obs.y);
+            ctx.lineTo(obs.x + obs.width, obs.y);
+            ctx.stroke();
+
+            // Steam wisps rising from edges
+            for (let s = 0; s < 3; s++) {
+                const sx = obs.x + (s === 0 ? 6 : s === 1 ? obs.width * 0.5 : obs.width - 6);
+                const sRise = ((lTime * 18 * (1 + s * 0.3)) % 30);
+                ctx.strokeStyle = `rgba(200, 160, 120, ${0.12 - sRise * 0.003})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(sx, obs.y - sRise * 0.4);
+                ctx.bezierCurveTo(sx + 4, obs.y - sRise * 0.7, sx - 3, obs.y - sRise, sx + 2, obs.y - sRise * 1.3);
+                ctx.stroke();
+            }
         }
     },
 

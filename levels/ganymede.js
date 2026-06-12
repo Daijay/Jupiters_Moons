@@ -397,74 +397,222 @@ Mission Control out.`,
             ctx.fillStyle = aGrad;
             ctx.fillRect(x, curveY - curtainH, 4, curtainH);
         }
+
+        // Magnetic polar oval — faint oval glow in upper sky
+        const pOvalAlpha = 0.04 + Math.sin(magT * 0.6) * 0.02;
+        const pOvalGrad = ctx.createRadialGradient(canvas.width * 0.5, canvas.height * 0.04, 20, canvas.width * 0.5, canvas.height * 0.04, canvas.width * 0.55);
+        pOvalGrad.addColorStop(0, 'transparent');
+        pOvalGrad.addColorStop(0.7, `rgba(60, 100, 240, ${pOvalAlpha})`);
+        pOvalGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = pOvalGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height * 0.12);
+
+        // Ground groove shadow detail — horizontal banding near surface
+        for (let gb = 0; gb < 6; gb++) {
+            const gbY = this.groundY + 12 + gb * 14;
+            const gbX = (gb * 139 + this.distance * 0.45) % canvas.width;
+            ctx.fillStyle = `rgba(30, 30, 40, ${0.18 + gb * 0.04})`;
+            ctx.fillRect(gbX, gbY, 45 + (gb % 4) * 15, 3);
+        }
+
+        // Magnetospheric charged particle rain — ultra-faint streaks from sky
+        for (let cr = 0; cr < 8; cr++) {
+            const crX = ((cr * 97 + magT * 22 * (1 + cr * 0.15)) % canvas.width);
+            const crY1 = canvas.height * (cr % 4) * 0.06;
+            const crY2 = crY1 + 25 + (cr % 3) * 10;
+            const crA = 0.04 + (cr % 3) * 0.015;
+            ctx.strokeStyle = `rgba(120, 170, 255, ${crA})`;
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(crX, crY1);
+            ctx.lineTo(crX + 2, crY2);
+            ctx.stroke();
+        }
     },
 
     renderObstacle(obs) {
         const ctx = this.ctx;
 
         if (obs.type === 'terrain_ridge') {
-            const grad = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y + obs.height);
-            grad.addColorStop(0, '#80808f');
-            grad.addColorStop(0.4, '#606070');
-            grad.addColorStop(1, '#404048');
-            ctx.fillStyle = grad;
+            // Ganymede grooved terrain ridge — two-tone: dark ancient region + bright grooved face
+            const pts = [
+                [obs.x, obs.y + obs.height],
+                [obs.x + obs.width * 0.15, obs.y + obs.height * 0.5],
+                [obs.x + obs.width * 0.32, obs.y + obs.height * 0.12],
+                [obs.x + obs.width * 0.5, obs.y],
+                [obs.x + obs.width * 0.68, obs.y + obs.height * 0.1],
+                [obs.x + obs.width * 0.85, obs.y + obs.height * 0.42],
+                [obs.x + obs.width, obs.y + obs.height],
+            ];
+
+            // Dark ancient terrain base
+            const baseGrad = ctx.createLinearGradient(obs.x, obs.y + obs.height, obs.x, obs.y);
+            baseGrad.addColorStop(0, '#2a2a34');
+            baseGrad.addColorStop(0.4, '#404050');
+            baseGrad.addColorStop(0.8, '#565668');
+            baseGrad.addColorStop(1, '#686878');
+            ctx.fillStyle = baseGrad;
             ctx.beginPath();
-            ctx.moveTo(obs.x, obs.y + obs.height);
-            ctx.lineTo(obs.x + obs.width * 0.2, obs.y + 5);
-            ctx.lineTo(obs.x + obs.width * 0.5, obs.y);
-            ctx.lineTo(obs.x + obs.width * 0.8, obs.y + 8);
-            ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+            pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
             ctx.closePath();
             ctx.fill();
-            // Bright icy streak on top
-            ctx.strokeStyle = 'rgba(200, 210, 230, 0.5)';
-            ctx.lineWidth = 1.5;
+
+            // Left dark face (shadowed)
+            ctx.fillStyle = 'rgba(10, 10, 18, 0.35)';
             ctx.beginPath();
-            ctx.moveTo(obs.x + obs.width * 0.2, obs.y + 5);
-            ctx.lineTo(obs.x + obs.width * 0.5, obs.y);
+            ctx.moveTo(pts[0][0], pts[0][1]);
+            ctx.lineTo(pts[2][0], pts[2][1]);
+            ctx.lineTo(pts[3][0], pts[3][1]);
+            ctx.lineTo(pts[0][0], pts[0][1]);
+            ctx.fill();
+
+            // Grooves — characteristic Ganymede parallel striations
+            ctx.save();
+            ctx.beginPath();
+            pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.closePath();
+            ctx.clip();
+            ctx.strokeStyle = 'rgba(160, 165, 190, 0.35)';
+            ctx.lineWidth = 1;
+            for (let g = 0; g < 5; g++) {
+                const gx = obs.x + obs.width * (0.22 + g * 0.14);
+                ctx.beginPath();
+                ctx.moveTo(gx, obs.y + obs.height);
+                ctx.lineTo(gx - obs.height * 0.18, obs.y);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Bright icy highlight on top ridgeline
+            ctx.strokeStyle = 'rgba(210, 220, 240, 0.7)';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(pts[1][0], pts[1][1]);
+            ctx.lineTo(pts[2][0], pts[2][1]);
+            ctx.lineTo(pts[3][0], pts[3][1]);
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(180, 195, 225, 0.45)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(pts[3][0], pts[3][1]);
+            ctx.lineTo(pts[4][0], pts[4][1]);
+            ctx.lineTo(pts[5][0], pts[5][1]);
             ctx.stroke();
 
+            // Aurora tint reflection on ridge surface
+            ctx.fillStyle = 'rgba(60, 100, 220, 0.06)';
+            ctx.beginPath();
+            pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.closePath();
+            ctx.fill();
+
         } else if (obs.type === 'crater_pit') {
-            ctx.fillStyle = '#181820';
-            ctx.fillRect(obs.x, obs.y, obs.width, 50);
-            // Rim highlight
-            ctx.strokeStyle = 'rgba(100, 100, 120, 0.6)';
+            // Ganymede crater — elliptical bowl with raised rim rings
+            const cx = obs.x + obs.width / 2;
+            const rimY = obs.y;
+            const w = obs.width;
+
+            // Outer raised rim shadow — sloped sides visible
+            const rimGrad = ctx.createLinearGradient(obs.x, rimY - 8, obs.x, rimY + 10);
+            rimGrad.addColorStop(0, 'rgba(90, 90, 108, 0.85)');
+            rimGrad.addColorStop(0.5, 'rgba(60, 60, 75, 0.7)');
+            rimGrad.addColorStop(1, 'rgba(20, 20, 28, 0.4)');
+            ctx.fillStyle = rimGrad;
+            ctx.beginPath();
+            ctx.ellipse(cx, rimY - 2, w / 2 + 6, 10, 0, 0, Math.PI);
+            ctx.fill();
+
+            // Pit void
+            ctx.fillStyle = '#0e0e16';
+            ctx.fillRect(obs.x, rimY, w, 50);
+
+            // Interior bowl gradient
+            const bowlGrad = ctx.createLinearGradient(obs.x, rimY + 2, obs.x, rimY + 38);
+            bowlGrad.addColorStop(0, 'rgba(50, 50, 65, 0.9)');
+            bowlGrad.addColorStop(0.5, 'rgba(22, 22, 32, 0.95)');
+            bowlGrad.addColorStop(1, 'rgba(8, 8, 12, 0.98)');
+            ctx.fillStyle = bowlGrad;
+            ctx.fillRect(obs.x + 2, rimY + 2, w - 4, 36);
+
+            // Elliptical inner floor hint
+            ctx.fillStyle = 'rgba(15, 15, 25, 0.95)';
+            ctx.beginPath();
+            ctx.ellipse(cx, rimY + 28, w * 0.32, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Rim highlight — bright lip
+            ctx.strokeStyle = 'rgba(130, 135, 160, 0.75)';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(obs.x, obs.y);
-            ctx.lineTo(obs.x + obs.width, obs.y);
+            ctx.moveTo(obs.x, rimY);
+            ctx.lineTo(obs.x + w, rimY);
             ctx.stroke();
-            // Inner shadow
-            const craterGrad = ctx.createLinearGradient(obs.x, obs.y, obs.x, obs.y + 40);
-            craterGrad.addColorStop(0, 'rgba(30, 30, 40, 0.8)');
-            craterGrad.addColorStop(1, 'rgba(10, 10, 15, 0.95)');
-            ctx.fillStyle = craterGrad;
-            ctx.fillRect(obs.x + 2, obs.y, obs.width - 4, 35);
+            ctx.strokeStyle = 'rgba(80, 85, 105, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(obs.x + 4, rimY + 4);
+            ctx.lineTo(obs.x + w - 4, rimY + 4);
+            ctx.stroke();
+
+            // Aurora faint reflected glow at pit floor
+            ctx.fillStyle = 'rgba(50, 80, 180, 0.05)';
+            ctx.fillRect(obs.x + 3, rimY + 20, w - 6, 18);
 
         } else if (obs.type === 'magnetic_pulse') {
             const pulse = Math.sin(obs.pulseAge * 3) * 0.5 + 0.5;
-            // Outer glow
-            const glowW = 20 + pulse * 30;
-            const glow = ctx.createLinearGradient(obs.x - glowW, obs.y, obs.x + obs.width + glowW, obs.y);
-            glow.addColorStop(0, 'transparent');
-            glow.addColorStop(0.3, `rgba(60, 120, 255, ${0.1 + pulse * 0.15})`);
-            glow.addColorStop(0.5, `rgba(100, 160, 255, ${0.2 + pulse * 0.2})`);
-            glow.addColorStop(0.7, `rgba(60, 120, 255, ${0.1 + pulse * 0.15})`);
-            glow.addColorStop(1, 'transparent');
-            ctx.fillStyle = glow;
-            ctx.fillRect(obs.x - glowW, obs.y, obs.width + glowW * 2, obs.height);
-            // Core wave line
-            ctx.fillStyle = `rgba(150, 200, 255, ${0.6 + pulse * 0.4})`;
-            ctx.fillRect(obs.x + obs.width / 2 - 2, obs.y, 4, obs.height);
-            // Horizontal ripple marks
-            ctx.strokeStyle = `rgba(100, 180, 255, ${0.3 + pulse * 0.3})`;
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 5; i++) {
-                const ry = obs.y + i * obs.height / 5;
-                const rw = 8 + pulse * 12;
+            const cx = obs.x + obs.width / 2;
+
+            // Expanding electromagnetic field rings
+            for (let r = 3; r >= 0; r--) {
+                const rAge = (obs.pulseAge * 0.7 + r * 0.5) % 2;
+                const rScale = rAge / 2;
+                const rAlpha = (1 - rScale) * (0.12 + pulse * 0.08);
+                const rw = (25 + r * 15) * rScale;
+                ctx.strokeStyle = `rgba(${80 + r * 20}, ${140 + r * 15}, 255, ${rAlpha})`;
+                ctx.lineWidth = 1.5 - r * 0.2;
                 ctx.beginPath();
-                ctx.moveTo(obs.x + obs.width / 2 - rw, ry);
-                ctx.lineTo(obs.x + obs.width / 2 + rw, ry);
+                ctx.ellipse(cx, obs.y + obs.height / 2, rw, obs.height * 0.45 * (0.4 + rScale * 0.6), 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Field lines arcing vertically
+            for (let fl = 0; fl < 3; fl++) {
+                const flX = cx + (fl - 1) * 8;
+                const flAlpha = 0.15 + pulse * 0.15 + fl * 0.04;
+                ctx.strokeStyle = `rgba(100, 160, 255, ${flAlpha})`;
+                ctx.lineWidth = 0.8;
+                ctx.beginPath();
+                ctx.moveTo(flX, obs.y);
+                ctx.bezierCurveTo(flX - 6, obs.y + obs.height * 0.3, flX + 6, obs.y + obs.height * 0.7, flX, obs.y + obs.height);
+                ctx.stroke();
+            }
+
+            // Core plasma column
+            const coreGrad = ctx.createLinearGradient(cx - 3, 0, cx + 3, 0);
+            coreGrad.addColorStop(0, `rgba(180, 210, 255, ${0.5 + pulse * 0.35})`);
+            coreGrad.addColorStop(0.5, `rgba(220, 240, 255, ${0.8 + pulse * 0.2})`);
+            coreGrad.addColorStop(1, `rgba(180, 210, 255, ${0.5 + pulse * 0.35})`);
+            ctx.fillStyle = coreGrad;
+            ctx.fillRect(cx - 2.5, obs.y, 5, obs.height);
+
+            // Outer diffuse glow halo
+            const haloGrad = ctx.createLinearGradient(cx - 35, 0, cx + 35, 0);
+            haloGrad.addColorStop(0, 'transparent');
+            haloGrad.addColorStop(0.4, `rgba(70, 130, 255, ${0.07 + pulse * 0.1})`);
+            haloGrad.addColorStop(0.6, `rgba(70, 130, 255, ${0.07 + pulse * 0.1})`);
+            haloGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = haloGrad;
+            ctx.fillRect(cx - 35, obs.y, 70, obs.height);
+
+            // Charged particle sparks along the column
+            for (let sp = 0; sp < 4; sp++) {
+                const sy = obs.y + obs.height * (0.15 + sp * 0.22);
+                const sw = 5 + pulse * (4 + sp * 2);
+                ctx.strokeStyle = `rgba(160, 200, 255, ${0.4 + pulse * 0.3})`;
+                ctx.lineWidth = 0.8;
+                ctx.beginPath();
+                ctx.moveTo(cx - sw, sy);
+                ctx.lineTo(cx + sw, sy);
                 ctx.stroke();
             }
         }

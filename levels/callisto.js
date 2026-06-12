@@ -354,82 +354,246 @@ Mission Control out.`,
             ctx.fillStyle = `rgba(255, 255, 255, ${sAlpha})`;
             ctx.fill();
         }
+
+        // Meteorite streaks in upper sky — more frequent than other moons (most cratered)
+        for (let ms = 0; ms < 3; ms++) {
+            const mSeed = Math.sin(this.distance * (0.00021 + ms * 0.000037) + ms * 4.7);
+            if (mSeed > 0.84) {
+                const mI = (mSeed - 0.84) * 6;
+                const mX = canvas.width * (0.15 + ((ms * 0.31 + this.distance * 0.000028) % 0.72));
+                const mY = canvas.height * (0.04 + ms * 0.06);
+                const mLen = 40 + mI * 25;
+                const metGrad = ctx.createLinearGradient(mX, mY, mX + mLen, mY + mLen * 0.35);
+                metGrad.addColorStop(0, `rgba(255, 240, 210, ${Math.min(mI * 0.6, 0.8)})`);
+                metGrad.addColorStop(0.5, `rgba(200, 160, 100, ${mI * 0.3})`);
+                metGrad.addColorStop(1, 'transparent');
+                ctx.strokeStyle = metGrad;
+                ctx.lineWidth = 1 + mI * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(mX, mY);
+                ctx.lineTo(mX + mLen, mY + mLen * 0.35);
+                ctx.stroke();
+            }
+        }
+
+        // Ancient surface layering — faint strata visible at ground level
+        for (let st = 0; st < 5; st++) {
+            const stY = this.groundY + 18 + st * 9;
+            const stX = (st * 113 + this.distance * 0.38) % canvas.width;
+            const stA = 0.08 + st * 0.025;
+            ctx.fillStyle = `rgba(42, 38, 34, ${stA})`;
+            ctx.fillRect(stX, stY, 55 + (st % 4) * 20, 2);
+        }
+
+        // Very faint nebula background haze — deep space at this distance
+        const hazeGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height * 0.5);
+        hazeGrad.addColorStop(0, `rgba(20, 15, 10, ${0.025 + Math.sin(this.distance * 0.0002) * 0.01})`);
+        hazeGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = hazeGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height * 0.5);
     },
 
     renderObstacle(obs) {
         const ctx = this.ctx;
 
         if (obs.type === 'crater_pit') {
-            // Deep crater gap
-            ctx.fillStyle = '#0a0a0a';
-            ctx.fillRect(obs.x, obs.y, obs.width, 55);
-            // Pit gradient
-            const pitGrad = ctx.createLinearGradient(obs.x, obs.y, obs.x, obs.y + 45);
-            pitGrad.addColorStop(0, 'rgba(20, 18, 16, 0.9)');
-            pitGrad.addColorStop(1, 'rgba(5, 4, 3, 0.98)');
-            ctx.fillStyle = pitGrad;
-            ctx.fillRect(obs.x + 2, obs.y, obs.width - 4, 40);
-            // Rim highlights
-            ctx.strokeStyle = 'rgba(90, 80, 70, 0.6)';
+            // Callisto ancient crater — wide multi-ring basin
+            const cx = obs.x + obs.width / 2;
+            const rimY = obs.y;
+            const w = obs.width;
+
+            // Outer ejecta blanket — faint brightening around crater
+            const ejectaGrad = ctx.createRadialGradient(cx, rimY, w * 0.4, cx, rimY, w * 1.0);
+            ejectaGrad.addColorStop(0, 'rgba(70, 62, 55, 0.0)');
+            ejectaGrad.addColorStop(0.6, 'rgba(55, 50, 44, 0.3)');
+            ejectaGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = ejectaGrad;
+            ctx.beginPath();
+            ctx.ellipse(cx, rimY, w * 0.5 + 20, 14, 0, Math.PI, 0);
+            ctx.fill();
+
+            // Outer rim — raised rounded lip
+            ctx.fillStyle = '#3a3530';
+            ctx.beginPath();
+            ctx.ellipse(cx, rimY - 3, w / 2 + 8, 11, 0, 0, Math.PI);
+            ctx.fill();
+
+            // Rim highlight
+            ctx.strokeStyle = 'rgba(110, 100, 88, 0.8)';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(obs.x, obs.y);
-            ctx.lineTo(obs.x + obs.width, obs.y);
+            ctx.ellipse(cx, rimY - 3, w / 2 + 8, 11, 0, Math.PI, 0, true);
             ctx.stroke();
-            // Inner rim shadow
-            ctx.fillStyle = 'rgba(60, 55, 50, 0.4)';
-            ctx.fillRect(obs.x, obs.y, 4, 10);
-            ctx.fillRect(obs.x + obs.width - 4, obs.y, 4, 10);
 
-        } else if (obs.type === 'crater_rim') {
-            // Raised crater rim wall
-            const grad = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y + obs.height);
-            grad.addColorStop(0, '#505050');
-            grad.addColorStop(0.4, '#3c3c3c');
-            grad.addColorStop(1, '#282828');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.moveTo(obs.x, obs.y + obs.height);
-            ctx.lineTo(obs.x + obs.width * 0.15, obs.y + 8);
-            ctx.lineTo(obs.x + obs.width * 0.45, obs.y);
-            ctx.lineTo(obs.x + obs.width * 0.8, obs.y + 5);
-            ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
-            ctx.closePath();
-            ctx.fill();
-            // Ancient texture — rough and pocked
-            ctx.strokeStyle = 'rgba(70, 65, 60, 0.5)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 3; i++) {
-                const ly = obs.y + obs.height * (0.3 + i * 0.25);
+            // Pit void
+            ctx.fillStyle = '#060504';
+            ctx.fillRect(obs.x, rimY, w, 55);
+
+            // Multi-ring bowl interior
+            const bowlGrad = ctx.createLinearGradient(obs.x, rimY + 2, obs.x, rimY + 50);
+            bowlGrad.addColorStop(0, 'rgba(45, 40, 36, 0.95)');
+            bowlGrad.addColorStop(0.3, 'rgba(22, 19, 17, 0.97)');
+            bowlGrad.addColorStop(1, 'rgba(4, 3, 2, 0.99)');
+            ctx.fillStyle = bowlGrad;
+            ctx.fillRect(obs.x + 2, rimY + 2, w - 4, 48);
+
+            // Inner rings — secondary crater rings visible at scale
+            for (let ring = 1; ring <= 2; ring++) {
+                ctx.strokeStyle = `rgba(55, 50, 44, ${0.5 - ring * 0.1})`;
+                ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(obs.x + 2, ly);
-                ctx.lineTo(obs.x + obs.width - 2, ly + 2);
+                ctx.moveTo(obs.x + w * (0.08 * ring), rimY + 5 * ring);
+                ctx.lineTo(obs.x + w * (1 - 0.08 * ring), rimY + 5 * ring);
                 ctx.stroke();
             }
+
+            // Central peak hint (large Callisto craters have central pits/peaks)
+            ctx.fillStyle = 'rgba(35, 31, 28, 0.8)';
+            ctx.beginPath();
+            ctx.ellipse(cx, rimY + 40, w * 0.12, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(60, 55, 50, 0.4)';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+
+        } else if (obs.type === 'crater_rim') {
+            // Ancient raised crater wall — weathered, layered, pocked
+            const pts = [
+                [obs.x, obs.y + obs.height],
+                [obs.x + obs.width * 0.1, obs.y + obs.height * 0.6],
+                [obs.x + obs.width * 0.25, obs.y + obs.height * 0.22],
+                [obs.x + obs.width * 0.45, obs.y],
+                [obs.x + obs.width * 0.62, obs.y + obs.height * 0.08],
+                [obs.x + obs.width * 0.78, obs.y + obs.height * 0.32],
+                [obs.x + obs.width * 0.9, obs.y + obs.height * 0.58],
+                [obs.x + obs.width, obs.y + obs.height],
+            ];
+
+            // Base fill — ancient dark terrain
+            const wallGrad = ctx.createLinearGradient(obs.x, obs.y + obs.height, obs.x, obs.y);
+            wallGrad.addColorStop(0, '#1e1c1a');
+            wallGrad.addColorStop(0.4, '#2e2b28');
+            wallGrad.addColorStop(0.75, '#3e3a36');
+            wallGrad.addColorStop(1, '#4a4540');
+            ctx.fillStyle = wallGrad;
+            ctx.beginPath();
+            pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.closePath();
+            ctx.fill();
+
+            // Shadow left face
+            ctx.fillStyle = 'rgba(5, 4, 3, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(pts[0][0], pts[0][1]);
+            ctx.lineTo(pts[2][0], pts[2][1]);
+            ctx.lineTo(pts[3][0], pts[3][1]);
+            ctx.lineTo(pts[0][0], pts[0][1]);
+            ctx.fill();
+
+            // Cliff drawing — stratigraphic layers
+            ctx.save();
+            ctx.beginPath();
+            pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py));
+            ctx.closePath();
+            ctx.clip();
+            for (let l = 0; l < 4; l++) {
+                const ly = obs.y + obs.height * (0.25 + l * 0.18);
+                ctx.strokeStyle = `rgba(65, 60, 55, ${0.35 - l * 0.05})`;
+                ctx.lineWidth = 0.8;
+                ctx.beginPath();
+                ctx.moveTo(obs.x, ly);
+                ctx.lineTo(obs.x + obs.width, ly + obs.height * 0.04);
+                ctx.stroke();
+            }
+            // Impact pock marks on face
+            for (let p = 0; p < 5; p++) {
+                const px = obs.x + obs.width * (0.15 + p * 0.18);
+                const py = obs.y + obs.height * (0.3 + (p % 3) * 0.2);
+                ctx.strokeStyle = 'rgba(25, 22, 20, 0.6)';
+                ctx.lineWidth = 0.7;
+                ctx.beginPath();
+                ctx.arc(px, py, 2 + (p % 3), 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Bright crest highlight
+            ctx.strokeStyle = 'rgba(95, 88, 80, 0.7)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(pts[2][0], pts[2][1]);
+            ctx.lineTo(pts[3][0], pts[3][1]);
+            ctx.lineTo(pts[4][0], pts[4][1]);
+            ctx.stroke();
 
         } else if (obs.type === 'impact_debris') {
             ctx.save();
             ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
-            // Irregular rocky shape
-            ctx.fillStyle = '#3a3530';
+
+            const hw = obs.width / 2;
+            const hh = obs.height / 2;
+
+            // Re-entry heat trail — glowing streak behind
+            const trailLen = hw * 3.5;
+            const trailGrad = ctx.createLinearGradient(hw, 0, hw + trailLen, 0);
+            trailGrad.addColorStop(0, `rgba(200, 120, 40, ${0.6 + Math.sin(Date.now() * 0.006) * 0.1})`);
+            trailGrad.addColorStop(0.4, 'rgba(160, 70, 10, 0.3)');
+            trailGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = trailGrad;
             ctx.beginPath();
-            const sides = 5 + Math.floor(obs.width / 8);
-            for (let i = 0; i < sides; i++) {
-                const a = (i / sides) * Math.PI * 2;
-                const r = obs.width / 2 * (0.6 + Math.sin(i * 2.3) * 0.4);
-                if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-                else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-            }
+            ctx.moveTo(hw, -hh * 0.5);
+            ctx.lineTo(hw + trailLen, -2);
+            ctx.lineTo(hw + trailLen, 2);
+            ctx.lineTo(hw, hh * 0.5);
             ctx.closePath();
             ctx.fill();
-            ctx.strokeStyle = 'rgba(80, 70, 60, 0.7)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            // Highlight
-            ctx.fillStyle = 'rgba(80, 75, 65, 0.5)';
+
+            // Heat glow around rock
+            const heatGlow = ctx.createRadialGradient(0, 0, hw * 0.4, 0, 0, hw * 1.8);
+            heatGlow.addColorStop(0, 'rgba(255, 150, 50, 0.22)');
+            heatGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = heatGlow;
+            ctx.fillRect(-hw * 1.8, -hh * 1.8, hw * 3.6, hh * 3.6);
+
+            // Irregular rocky silhouette
+            const sides = 6 + Math.floor(hw / 4);
             ctx.beginPath();
-            ctx.ellipse(-obs.width * 0.15, -obs.height * 0.2, obs.width * 0.2, obs.height * 0.12, -0.4, 0, Math.PI * 2);
+            for (let i = 0; i < sides; i++) {
+                const a = (i / sides) * Math.PI * 2 - 0.3;
+                const r = hw * (0.65 + Math.sin(i * 2.7 + obs.x * 0.05) * 0.35);
+                if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r * 0.85);
+                else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r * 0.85);
+            }
+            ctx.closePath();
+            // Dark interior with hot orange edges
+            const rockGrad = ctx.createRadialGradient(-hw * 0.2, -hh * 0.2, 0, 0, 0, hw);
+            rockGrad.addColorStop(0, '#2a2520');
+            rockGrad.addColorStop(0.5, '#1e1a16');
+            rockGrad.addColorStop(1, '#0e0c0a');
+            ctx.fillStyle = rockGrad;
             ctx.fill();
+
+            // Glowing molten edges
+            ctx.strokeStyle = `rgba(210, 100, 20, ${0.5 + Math.sin(Date.now() * 0.008) * 0.15})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Surface facet highlight
+            ctx.fillStyle = 'rgba(75, 68, 60, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(-hw * 0.25, -hh * 0.3, hw * 0.28, hh * 0.18, -0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Fragment sparks
+            for (let sp = 0; sp < 4; sp++) {
+                const sa = (sp / 4) * Math.PI + 0.2;
+                const sd = hw * (0.9 + Math.sin(Date.now() * 0.01 + sp) * 0.15);
+                ctx.beginPath();
+                ctx.arc(Math.cos(sa) * sd * 1.1, Math.sin(sa) * sd * 0.7, 1.2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, ${140 + sp * 20}, 30, ${0.6 - sp * 0.1})`;
+                ctx.fill();
+            }
+
             ctx.restore();
         }
     },
