@@ -179,9 +179,15 @@ Mission Control out.`,
             ctx.fillStyle = skyGradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        // Dark overlay for gameplay readability + preserve volcanic mood
-        ctx.fillStyle = 'rgba(10, 5, 0, 0.35)';
+        // Dark overlay — heavier at top so player/obstacles are readable
+        ctx.fillStyle = 'rgba(10, 5, 0, 0.28)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const ioSkyDark = ctx.createLinearGradient(0, 0, 0, this.groundY);
+        ioSkyDark.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
+        ioSkyDark.addColorStop(0.55, 'rgba(0, 0, 0, 0.18)');
+        ioSkyDark.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = ioSkyDark;
+        ctx.fillRect(0, 0, canvas.width, this.groundY);
 
         // Jupiter in sky — massive presence
         const jx = canvas.width * 0.75;
@@ -264,6 +270,60 @@ Mission Control out.`,
             ctx.fillStyle = p.color.replace(')', `, ${p.opacity})`).replace('rgb', 'rgba');
             ctx.fill();
         });
+
+        // === IO UNIQUE ATMOSPHERE ===
+
+        // Sulfur ash falling from sky — tiny particles drifting down
+        for (let i = 0; i < 30; i++) {
+            const drift = Math.sin(time * 0.0008 + i * 2.3) * 15;
+            const ax = ((i * 137.5 + time * 0.018 * (1 + (i % 3) * 0.4) + drift) % (canvas.width + 40)) - 20;
+            const ay = ((i * 89.3 + time * 0.022 * (1.5 + (i % 4) * 0.3)) % (this.groundY - 20));
+            const alpha = 0.12 + Math.sin(i * 1.7 + time * 0.001) * 0.06;
+            ctx.beginPath();
+            ctx.arc(ax, ay, 0.8 + (i % 3) * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${190 + i % 40}, ${100 + i % 30}, ${i % 20}, ${alpha})`;
+            ctx.fill();
+        }
+
+        // Distant pulsing volcano glows on horizon
+        for (let i = 0; i < 5; i++) {
+            const vx = canvas.width * (0.08 + i * 0.22);
+            const vy = this.groundY + 5;
+            const pulse = 0.25 + Math.sin(time * 0.0015 + i * 1.8) * 0.18;
+            const vSize = 55 + i * 18;
+            const vGlow = ctx.createRadialGradient(vx, vy, 0, vx, vy, vSize);
+            vGlow.addColorStop(0, `rgba(255, ${60 + i * 10}, 0, ${pulse})`);
+            vGlow.addColorStop(0.5, `rgba(200, 30, 0, ${pulse * 0.35})`);
+            vGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = vGlow;
+            ctx.fillRect(vx - vSize, vy - vSize * 0.7, vSize * 2, vSize);
+        }
+
+        // Sulfur gas wisps near surface — horizontal haze layers
+        for (let i = 0; i < 3; i++) {
+            const waveY = this.groundY - 18 - i * 12;
+            const wOpacity = (0.06 - i * 0.015) * (0.8 + Math.sin(time * 0.0009 + i) * 0.2);
+            const wHaze = ctx.createLinearGradient(0, waveY - 6, 0, waveY + 6);
+            wHaze.addColorStop(0, 'transparent');
+            wHaze.addColorStop(0.5, `rgba(180, 140, 10, ${wOpacity})`);
+            wHaze.addColorStop(1, 'transparent');
+            ctx.fillStyle = wHaze;
+            ctx.fillRect(0, waveY - 6, canvas.width, 12);
+        }
+
+        // Heat shimmer lines above ground — short vertical distortion streaks
+        ctx.save();
+        ctx.globalAlpha = 0.07 + Math.sin(time * 0.003) * 0.03;
+        for (let i = 0; i < 12; i++) {
+            const hx = (i * 97 + this.distance * 0.5) % canvas.width;
+            const hh = 8 + (i % 4) * 5;
+            const hGrad = ctx.createLinearGradient(hx, this.groundY - hh, hx, this.groundY);
+            hGrad.addColorStop(0, 'transparent');
+            hGrad.addColorStop(1, 'rgba(255, 160, 40, 0.4)');
+            ctx.fillStyle = hGrad;
+            ctx.fillRect(hx - 1, this.groundY - hh, 2, hh);
+        }
+        ctx.restore();
     },
 
     renderPlains(plains, baseColor, glowColor, opacity) {

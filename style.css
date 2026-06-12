@@ -651,6 +651,17 @@ canvas {
     background: var(--space-black);
     justify-content: center;
     align-items: center;
+    background-size: cover;
+    background-position: center;
+}
+
+#death-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(80, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.7) 100%);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .death-overlay {
@@ -663,6 +674,7 @@ canvas {
     background-size: cover;
     animation: crackIn 0.3s ease-out;
     pointer-events: none;
+    z-index: 2;
 }
 
 @keyframes crackIn {
@@ -674,7 +686,12 @@ canvas {
     position: relative;
     z-index: 10;
     text-align: center;
-    padding: 2rem;
+    padding: 2.5rem 3rem;
+    background: rgba(0, 0, 0, 0.72);
+    border: 1px solid rgba(255, 68, 68, 0.18);
+    border-radius: 2px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 60px rgba(255, 68, 68, 0.12), inset 0 0 40px rgba(0, 0, 0, 0.5);
 }
 
 .signal-lost {
@@ -716,12 +733,12 @@ canvas {
     max-width: 600px;
     margin: 0 auto 2rem;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: var(--text-secondary);
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.02);
+    font-size: 1.15rem;
+    line-height: 1.7;
+    color: rgba(200, 210, 230, 0.92);
+    padding: 1rem 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 10, 30, 0.6);
 }
 
 .death-buttons {

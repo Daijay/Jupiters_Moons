@@ -94,27 +94,51 @@ class CutsceneManager {
     }
 
     speakText(text) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.95;
-            utterance.pitch = 1.1;
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
 
-            const voices = window.speechSynthesis.getVoices();
-            const femaleVoice = voices.find(v =>
-                v.name.includes('female') ||
-                v.name.includes('Female') ||
-                v.name.includes('Zira') ||
-                v.name.includes('Samantha') ||
-                v.name.includes('Google UK English Female') ||
-                v.name.includes('Microsoft Zira')
-            ) || voices.find(v => v.lang.startsWith('en'));
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.88;
+        utterance.pitch = 1.15;
+        utterance.volume = 1;
 
-            if (femaleVoice) {
-                utterance.voice = femaleVoice;
+        const pickFemale = (voices) => {
+            // Prefer named female / neutral voices, avoid explicitly male
+            const priority = [
+                v => v.name.includes('Zira'),
+                v => v.name.includes('Samantha'),
+                v => v.name.includes('Google UK English Female'),
+                v => v.name.includes('Google US English') && !v.name.toLowerCase().includes('male'),
+                v => v.name.includes('Female') || v.name.includes('female'),
+                v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male') && !v.name.includes('David') && !v.name.includes('Mark') && !v.name.includes('James'),
+                v => v.lang.startsWith('en'),
+            ];
+            for (const test of priority) {
+                const found = voices.find(test);
+                if (found) return found;
             }
+            return null;
+        };
 
+        const doSpeak = () => {
+            const voices = window.speechSynthesis.getVoices();
+            const voice = pickFemale(voices);
+            if (voice) utterance.voice = voice;
             window.speechSynthesis.speak(utterance);
+        };
+
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            doSpeak();
+        } else {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.onvoiceschanged = null;
+                doSpeak();
+            };
+            // Safety fallback if onvoiceschanged never fires
+            setTimeout(() => {
+                if (!window.speechSynthesis.speaking) doSpeak();
+            }, 600);
         }
     }
 

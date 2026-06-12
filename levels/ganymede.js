@@ -213,9 +213,15 @@ Mission Control out.`,
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        // Dark overlay for readability + preserve icy-grey mood
-        ctx.fillStyle = 'rgba(2, 4, 10, 0.35)';
+        // Dark overlay — heavier at top for obstacle readability
+        ctx.fillStyle = 'rgba(2, 4, 10, 0.25)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const ganSkyDark = ctx.createLinearGradient(0, 0, 0, this.groundY);
+        ganSkyDark.addColorStop(0, 'rgba(0, 4, 18, 0.55)');
+        ganSkyDark.addColorStop(0.6, 'rgba(0, 3, 12, 0.18)');
+        ganSkyDark.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = ganSkyDark;
+        ctx.fillRect(0, 0, canvas.width, this.groundY);
 
         // Stars
         for (let i = 0; i < 150; i++) {
@@ -317,6 +323,80 @@ Mission Control out.`,
             ctx.fillStyle = `rgba(100, 150, 255, ${p.opacity})`;
             ctx.fill();
         });
+
+        // === GANYMEDE UNIQUE ATMOSPHERE ===
+
+        // Magnetic field particle streams — arcing across sky
+        const magT = this.magneticTime;
+        for (let i = 0; i < 5; i++) {
+            const startX = canvas.width * (0.1 + i * 0.2);
+            const arcH = canvas.height * (0.08 + (i % 3) * 0.04);
+            const phase = magT * 0.8 + i * 1.3;
+            const streamAlpha = 0.06 + Math.sin(phase) * 0.03;
+            ctx.beginPath();
+            ctx.moveTo(startX, 0);
+            ctx.quadraticCurveTo(
+                startX + Math.sin(phase * 0.4) * 80,
+                arcH,
+                startX + Math.cos(phase * 0.3) * 60,
+                canvas.height * 0.45
+            );
+            ctx.strokeStyle = `rgba(80, 130, 255, ${streamAlpha})`;
+            ctx.lineWidth = 1.5 + (i % 2) * 0.5;
+            ctx.stroke();
+        }
+
+        // Magnetic dust particles following field lines
+        for (let i = 0; i < 20; i++) {
+            const mx = ((i * 127.3 + magT * 18 * (i % 3 + 1)) % canvas.width);
+            const my = canvas.height * (0.08 + (i % 6) * 0.085);
+            const mAlpha = 0.1 + Math.sin(magT * 1.2 + i * 0.9) * 0.06;
+            ctx.beginPath();
+            ctx.arc(mx, my, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(90, 140, 255, ${mAlpha})`;
+            ctx.fill();
+        }
+
+        // Grooved terrain parallax highlight lines
+        for (let i = 0; i < 10; i++) {
+            const gx = ((i * 183 + this.distance * 0.35) % (canvas.width + 250)) - 100;
+            const angle = Math.PI * (0.16 + (i % 4) * 0.02);
+            const gLen = 130 + (i % 3) * 50;
+            const gAlpha = 0.08 + (i % 3) * 0.03;
+            ctx.strokeStyle = `rgba(140, 155, 185, ${gAlpha})`;
+            ctx.lineWidth = 0.8 + (i % 2) * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(gx, this.groundY - 5);
+            ctx.lineTo(gx + Math.cos(angle) * gLen, this.groundY - Math.sin(angle) * gLen * 0.45);
+            ctx.stroke();
+        }
+
+        // Surface dust kicked up from ground — slow horizontal drift
+        for (let i = 0; i < 15; i++) {
+            const dx = ((i * 211.7 + this.distance * 0.6 + Math.sin(i * 2.1) * 20) % (canvas.width + 20)) - 10;
+            const dy = this.groundY - 4 - (i % 5) * 6;
+            const dAlpha = 0.06 + (i % 4) * 0.02;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 1 + (i % 3) * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(120, 125, 145, ${dAlpha})`;
+            ctx.fill();
+        }
+
+        // Distant aurora curtain in upper sky
+        const aT = magT * 0.5;
+        for (let x = 0; x < canvas.width; x += 5) {
+            const waveA = Math.sin(x * 0.015 + aT) * 10;
+            const waveB = Math.sin(x * 0.008 + aT * 1.3) * 8;
+            const curveY = canvas.height * 0.07 + waveA + waveB;
+            const curtainAlpha = 0.05 + Math.sin(x * 0.02 + aT) * 0.025;
+            const curtainH = 20 + Math.sin(x * 0.018 + aT * 0.7) * 10;
+            const aGrad = ctx.createLinearGradient(x, curveY - curtainH, x, curveY);
+            aGrad.addColorStop(0, 'transparent');
+            aGrad.addColorStop(0.5, `rgba(70, 120, 255, ${curtainAlpha})`);
+            aGrad.addColorStop(1, `rgba(100, 80, 220, ${curtainAlpha * 0.5})`);
+            ctx.fillStyle = aGrad;
+            ctx.fillRect(x, curveY - curtainH, 4, curtainH);
+        }
     },
 
     renderObstacle(obs) {

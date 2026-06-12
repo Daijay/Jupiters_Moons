@@ -205,9 +205,15 @@ Mission Control out.`,
             ctx.fillStyle = skyGradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        // Dark overlay for gameplay readability
-        ctx.fillStyle = 'rgba(0, 5, 15, 0.3)';
+        // Dark overlay — heavier at top so player/obstacles are readable
+        ctx.fillStyle = 'rgba(0, 5, 15, 0.22)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const eurSkyDark = ctx.createLinearGradient(0, 0, 0, this.groundY);
+        eurSkyDark.addColorStop(0, 'rgba(0, 5, 20, 0.52)');
+        eurSkyDark.addColorStop(0.6, 'rgba(0, 5, 15, 0.15)');
+        eurSkyDark.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = eurSkyDark;
+        ctx.fillRect(0, 0, canvas.width, this.groundY);
 
         // Stars
         for (let i = 0; i < 120; i++) {
@@ -303,6 +309,76 @@ Mission Control out.`,
             ctx.fillStyle = `rgba(220, 240, 255, ${p.opacity})`;
             ctx.fill();
         });
+
+        // === EUROPA UNIQUE ATMOSPHERE ===
+
+        // Subsurface ocean blue glow bleeding through ice cracks
+        const crackGlow = ctx.createLinearGradient(0, this.groundY - 2, 0, this.groundY + 25);
+        crackGlow.addColorStop(0, `rgba(0, 100, 200, ${0.22 + Math.sin(time * 0.001) * 0.04})`);
+        crackGlow.addColorStop(0.5, 'rgba(0, 60, 140, 0.12)');
+        crackGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = crackGlow;
+        ctx.fillRect(0, this.groundY - 2, canvas.width, 27);
+
+        // Ice crystal micro-sparkles on surface
+        for (let i = 0; i < 60; i++) {
+            const sx = (i * 83.7 + this.distance * 0.9) % canvas.width;
+            const sy = this.groundY + 4 + (i % 7) * 9;
+            const sparkle = Math.sin(time * 0.012 + i * 0.8);
+            if (sparkle > 0.55) {
+                const sAlpha = (sparkle - 0.55) * 2.2;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 1.2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(210, 235, 255, ${sAlpha * 0.9})`;
+                ctx.fill();
+                // 4-point star burst
+                ctx.strokeStyle = `rgba(180, 220, 255, ${sAlpha * 0.4})`;
+                ctx.lineWidth = 0.6;
+                for (let r = 0; r < 4; r++) {
+                    const a = r * Math.PI / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    ctx.lineTo(sx + Math.cos(a) * 5, sy + Math.sin(a) * 5);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Drifting ice crystal particles from sky
+        for (let i = 0; i < 18; i++) {
+            const cx = ((i * 179.3 + time * 0.014 * (1 + (i % 3) * 0.5)) % (canvas.width + 20)) - 10;
+            const cy = ((i * 97.1 + time * 0.019 * (1 + (i % 4) * 0.25)) % (this.groundY * 0.85));
+            const cAlpha = 0.1 + (i % 5) * 0.03;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 1.1, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(200, 225, 255, ${cAlpha})`;
+            ctx.fill();
+        }
+
+        // Jupiter light caustic shimmer on ice surface
+        const causticTime = time * 0.0006;
+        for (let i = 0; i < 8; i++) {
+            const cx = canvas.width * (0.05 + (i * 0.13 + Math.sin(causticTime + i) * 0.06));
+            const cOpacity = 0.04 + Math.sin(causticTime * 1.3 + i * 1.1) * 0.025;
+            const cGlow = ctx.createRadialGradient(cx, this.groundY, 0, cx, this.groundY, 30 + i * 8);
+            cGlow.addColorStop(0, `rgba(180, 200, 240, ${cOpacity})`);
+            cGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = cGlow;
+            ctx.fillRect(cx - 50, this.groundY - 10, 100, 20);
+        }
+
+        // Thin aurora ribbon in upper sky (Jupiter's magnetosphere)
+        const auroraY = canvas.height * 0.12;
+        const auroraAlpha = 0.06 + Math.sin(time * 0.0007) * 0.03;
+        for (let i = 0; i < canvas.width; i += 4) {
+            const wave = Math.sin(i * 0.01 + time * 0.001) * 12;
+            const aGrad = ctx.createLinearGradient(i, auroraY + wave - 8, i, auroraY + wave + 8);
+            aGrad.addColorStop(0, 'transparent');
+            aGrad.addColorStop(0.5, `rgba(100, 180, 255, ${auroraAlpha})`);
+            aGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = aGrad;
+            ctx.fillRect(i, auroraY + wave - 8, 3, 16);
+        }
     },
 
     renderObstacle(obs) {

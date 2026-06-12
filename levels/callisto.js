@@ -198,9 +198,15 @@ Mission Control out.`,
             ctx.fillStyle = '#020202';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        // Dark overlay for readability + preserve ancient dark mood
-        ctx.fillStyle = 'rgba(3, 2, 2, 0.4)';
+        // Dark overlay — strongest at top for readability
+        ctx.fillStyle = 'rgba(3, 2, 2, 0.3)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const calSkyDark = ctx.createLinearGradient(0, 0, 0, this.groundY);
+        calSkyDark.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+        calSkyDark.addColorStop(0.55, 'rgba(0, 0, 0, 0.2)');
+        calSkyDark.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = calSkyDark;
+        ctx.fillRect(0, 0, canvas.width, this.groundY);
 
         // Stars — dim and sparse (Callisto is the most distant of the 4)
         for (let i = 0; i < 100; i++) {
@@ -294,6 +300,60 @@ Mission Control out.`,
         vig.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // === CALLISTO UNIQUE ATMOSPHERE ===
+
+        // Distant impact flash — rare, bright streak on horizon
+        const fSeed = Math.sin(this.distance * 0.00031) * Math.sin(this.distance * 0.000073);
+        if (fSeed > 0.92) {
+            const fIntensity = (fSeed - 0.92) * 12;
+            const fx = canvas.width * (0.2 + (Math.sin(this.distance * 0.00018) * 0.5 + 0.5) * 0.65);
+            const fy = this.groundY - 8;
+            const fGlow = ctx.createRadialGradient(fx, fy, 0, fx, fy, 50 * fIntensity);
+            fGlow.addColorStop(0, `rgba(255, 230, 200, ${Math.min(fIntensity, 0.9)})`);
+            fGlow.addColorStop(0.4, `rgba(220, 170, 100, ${fIntensity * 0.4})`);
+            fGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = fGlow;
+            ctx.fillRect(fx - 70, fy - 60, 140, 80);
+            // Ejecta streak upward
+            ctx.strokeStyle = `rgba(255, 220, 180, ${fIntensity * 0.5})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(fx, fy);
+            ctx.lineTo(fx + 15 * fIntensity, fy - 40 * fIntensity);
+            ctx.stroke();
+        }
+
+        // Ancient slow dust motes drifting just above ground
+        for (let i = 0; i < 22; i++) {
+            const dx = ((i * 173.4 + this.distance * 0.22 + Math.sin(i * 2.7) * 25) % (canvas.width + 30)) - 15;
+            const dy = this.groundY - 5 - (i % 7) * 8;
+            const dAlpha = 0.08 + (i % 5) * 0.025;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 0.7 + (i % 3) * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(90, 82, 72, ${dAlpha})`;
+            ctx.fill();
+        }
+
+        // Crater surface shimmer — faint highlights on ancient rock
+        for (let i = 0; i < 15; i++) {
+            const rx = (i * 137 + this.distance * 0.4) % canvas.width;
+            const ry = this.groundY + 8 + (i % 5) * 10;
+            const rAlpha = 0.04 + Math.sin(this.distance * 0.002 + i * 1.4) * 0.02;
+            ctx.fillStyle = `rgba(120, 110, 95, ${rAlpha})`;
+            ctx.fillRect(rx, ry, 6 + (i % 15), 1);
+        }
+
+        // Deep space stars visible through thin atmosphere — barely visible
+        for (let i = 0; i < 40; i++) {
+            const sx = (i * 53.3 + this.distance * 0.015) % canvas.width;
+            const sy = (i * 37.7) % (canvas.height * 0.6);
+            const sAlpha = 0.06 + (i % 6) * 0.012;
+            ctx.beginPath();
+            ctx.arc(sx, sy, (i % 3) * 0.3 + 0.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${sAlpha})`;
+            ctx.fill();
+        }
     },
 
     renderObstacle(obs) {
