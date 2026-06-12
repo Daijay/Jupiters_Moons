@@ -1,0 +1,875 @@
+/* ============================================
+   SATURN'S MOONS - A Cassini Mission
+   Premium Cinematic Space Aesthetic
+   ============================================ */
+
+:root {
+    --space-black: #0a0a0f;
+    --deep-navy: #0d1117;
+    --saturn-gold: #d4a853;
+    --saturn-amber: #c9933a;
+    --ring-cream: #e8dcc4;
+    --ice-blue: #7ec8e3;
+    --geyser-cyan: #00d4ff;
+    --titan-orange: #d4763a;
+    --warning-red: #ff4444;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --panel-bg: rgba(13, 17, 23, 0.95);
+    --glow-gold: 0 0 30px rgba(212, 168, 83, 0.5);
+    --glow-cyan: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--space-black);
+    color: var(--text-primary);
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+
+#game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.screen.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* ============================================
+   TITLE SCREEN
+   ============================================ */
+
+#title-screen {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--space-black);
+}
+
+#title-bg-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.title-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    animation: titleFadeIn 2s ease-out;
+}
+
+@keyframes titleFadeIn {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.game-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(3rem, 10vw, 8rem);
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    background: linear-gradient(180deg, #ffffff 0%, var(--saturn-gold) 50%, var(--saturn-amber) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 60px rgba(212, 168, 83, 0.4);
+    margin-bottom: 0.5rem;
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+    0%, 100% { filter: drop-shadow(0 0 30px rgba(212, 168, 83, 0.3)); }
+    50% { filter: drop-shadow(0 0 60px rgba(212, 168, 83, 0.6)); }
+}
+
+.subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(1rem, 3vw, 1.8rem);
+    font-weight: 300;
+    letter-spacing: 0.5em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.developers {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(0.9rem, 2vw, 1.3rem);
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.15em;
+    margin-bottom: 3rem;
+    padding: 0.8rem 2rem;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.2), transparent);
+    border-top: 1px solid rgba(212, 168, 83, 0.4);
+    border-bottom: 1px solid rgba(212, 168, 83, 0.4);
+    text-shadow: 0 0 20px rgba(212, 168, 83, 0.8), 0 2px 4px rgba(0, 0, 0, 0.8);
+    animation: developerPulse 2s ease-in-out infinite;
+}
+
+@keyframes developerPulse {
+    0%, 100% {
+        text-shadow: 0 0 20px rgba(212, 168, 83, 0.8), 0 2px 4px rgba(0, 0, 0, 0.8);
+        border-color: rgba(212, 168, 83, 0.4);
+    }
+    50% {
+        text-shadow: 0 0 30px rgba(212, 168, 83, 1), 0 0 50px rgba(212, 168, 83, 0.5), 0 2px 4px rgba(0, 0, 0, 0.8);
+        border-color: rgba(212, 168, 83, 0.7);
+    }
+}
+
+.press-space {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.3em;
+    margin-top: 2rem;
+    animation: pressSpaceBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes pressSpaceBlink {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+.glow-btn {
+    position: relative;
+    padding: 1rem 3rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    color: var(--saturn-gold);
+    background: transparent;
+    border: 2px solid var(--saturn-gold);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: btnPulse 2s ease-in-out infinite;
+}
+
+@keyframes btnPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(212, 168, 83, 0.3), inset 0 0 20px rgba(212, 168, 83, 0.1); }
+    50% { box-shadow: 0 0 40px rgba(212, 168, 83, 0.5), inset 0 0 30px rgba(212, 168, 83, 0.2); }
+}
+
+.glow-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.glow-btn:hover::before {
+    left: 100%;
+}
+
+.glow-btn:hover {
+    background: rgba(212, 168, 83, 0.1);
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(212, 168, 83, 0.6);
+}
+
+.glow-btn.secondary {
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
+    animation: none;
+}
+
+.glow-btn.secondary:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   CUTSCENE SCREEN
+   ============================================ */
+
+#cutscene-screen {
+    background: var(--space-black);
+    justify-content: center;
+    align-items: center;
+}
+
+#cutscene-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+#cutscene-text {
+    position: relative;
+    z-index: 10;
+    max-width: 900px;
+    padding: 2rem;
+    text-align: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+    font-weight: 400;
+    line-height: 1.8;
+    color: var(--text-primary);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+#cutscene-text.visible {
+    opacity: 1;
+}
+
+#cutscene-progress {
+    position: absolute;
+    bottom: 3%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    text-align: center;
+}
+
+.skip-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.2em;
+    animation: skipHintPulse 2s ease-in-out infinite;
+}
+
+@keyframes skipHintPulse {
+    0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.8; transform: translateX(-50%) scale(1.02); }
+}
+
+#mission-control-box {
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 800px;
+    background: rgba(0, 20, 0, 0.9);
+    border: 1px solid #00ff00;
+    border-radius: 4px;
+    padding: 1.5rem;
+    font-family: 'Space Mono', monospace;
+    z-index: 20;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.2), inset 0 0 60px rgba(0, 255, 0, 0.05);
+}
+
+#mission-control-box.hidden {
+    display: none;
+}
+
+.mc-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.mc-signal {
+    color: #00ff00;
+    font-size: 0.8rem;
+    animation: signalBlink 1s infinite;
+}
+
+@keyframes signalBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.5; }
+}
+
+.mc-timestamp {
+    color: #00ff00;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.mc-content {
+    color: #00ff00;
+    font-size: 1rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* ============================================
+   SYSTEM MAP SCREEN
+   ============================================ */
+
+#map-screen {
+    background: var(--space-black);
+}
+
+#map-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#map-ui {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    z-index: 10;
+}
+
+#map-ui h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.3em;
+    color: var(--saturn-gold);
+    margin-bottom: 1rem;
+}
+
+#mission-progress {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   DOSSIER SCREEN
+   ============================================ */
+
+#dossier-screen {
+    background: linear-gradient(135deg, var(--deep-navy) 0%, var(--space-black) 100%);
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.dossier-container {
+    width: 100%;
+    max-width: 800px;
+    background: var(--panel-bg);
+    border: 1px solid rgba(212, 168, 83, 0.3);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 168, 83, 0.1);
+    animation: dossierSlideIn 0.8s ease-out;
+}
+
+@keyframes dossierSlideIn {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.dossier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(212, 168, 83, 0.2);
+}
+
+.classified {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.3em;
+    color: var(--saturn-gold);
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--saturn-gold);
+}
+
+.dossier-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.dossier-content h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+}
+
+.dossier-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    border-left: 3px solid var(--saturn-gold);
+}
+
+.stat-label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.dossier-facts h3,
+.dossier-hazard h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    color: var(--saturn-gold);
+    margin-bottom: 1rem;
+}
+
+.dossier-facts {
+    margin-bottom: 2rem;
+}
+
+#dossier-facts-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+#dossier-facts-list li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+#dossier-facts-list li::before {
+    content: '▹';
+    position: absolute;
+    left: 0;
+    color: var(--saturn-gold);
+}
+
+.dossier-hazard {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.dossier-hazard h3 {
+    color: var(--warning-red);
+}
+
+#dossier-hazard-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+#begin-mission-btn {
+    width: 100%;
+    padding: 1.2rem;
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   GAME SCREEN
+   ============================================ */
+
+#game-screen {
+    background: var(--space-black);
+}
+
+#level-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#game-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 10;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+}
+
+.hud-left, .hud-right {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.hud-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#countdown {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8rem;
+    font-weight: 900;
+    color: var(--saturn-gold);
+    text-shadow: 0 0 60px rgba(212, 168, 83, 0.8);
+    animation: countdownPulse 1s ease-in-out;
+}
+
+@keyframes countdownPulse {
+    0% { transform: scale(1.5); opacity: 0; }
+    50% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0; }
+}
+
+#countdown.hidden {
+    display: none;
+}
+
+/* ============================================
+   LEVEL COMPLETE SCREEN
+   ============================================ */
+
+#complete-screen {
+    background: rgba(10, 10, 15, 0.95);
+    justify-content: center;
+    align-items: center;
+}
+
+.complete-container {
+    text-align: center;
+    animation: completeSlideIn 0.8s ease-out;
+}
+
+@keyframes completeSlideIn {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.complete-checkmark {
+    font-size: 6rem;
+    color: #00ff00;
+    margin-bottom: 1rem;
+    animation: checkmarkPop 0.5s ease-out 0.3s both;
+    text-shadow: 0 0 60px rgba(0, 255, 0, 0.8);
+}
+
+@keyframes checkmarkPop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.complete-container h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    letter-spacing: 0.3em;
+    color: var(--saturn-gold);
+    margin-bottom: 0.5rem;
+}
+
+.complete-container h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.complete-subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.2em;
+}
+
+/* ============================================
+   DEATH SCREEN
+   ============================================ */
+
+#death-screen {
+    background: var(--space-black);
+    justify-content: center;
+    align-items: center;
+}
+
+.death-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><line x1="0" y1="0" x2="100" y2="100" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/><line x1="100" y1="0" x2="0" y2="100" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/><line x1="30" y1="0" x2="70" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="0.3"/><line x1="70" y1="0" x2="30" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="0.3"/></svg>');
+    background-size: cover;
+    animation: crackIn 0.3s ease-out;
+    pointer-events: none;
+}
+
+@keyframes crackIn {
+    0% { opacity: 0; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.death-container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 2rem;
+}
+
+.signal-lost {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 700;
+    color: var(--warning-red);
+    letter-spacing: 0.3em;
+    margin-bottom: 1rem;
+    animation: signalFlicker 0.1s infinite;
+    text-shadow: 0 0 30px rgba(255, 68, 68, 0.8);
+}
+
+@keyframes signalFlicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.death-static {
+    width: 100%;
+    height: 100px;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 255, 255, 0.03) 2px,
+        rgba(255, 255, 255, 0.03) 4px
+    );
+    margin-bottom: 2rem;
+    animation: staticScroll 0.1s linear infinite;
+}
+
+@keyframes staticScroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 4px; }
+}
+
+.death-fact {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.death-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.death-buttons .glow-btn {
+    min-width: 200px;
+}
+
+/* ============================================
+   CREDITS SCREEN
+   ============================================ */
+
+#credits-screen {
+    background: var(--space-black);
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.credits-content {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+#credits-scroll {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    padding: 2rem;
+    animation: creditsRoll 60s linear forwards;
+}
+
+@keyframes creditsRoll {
+    0% { transform: translateY(100vh); }
+    100% { transform: translateY(-100%); }
+}
+
+#credits-scroll h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    color: var(--saturn-gold);
+    margin-bottom: 3rem;
+}
+
+#credits-scroll h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin: 2rem 0 1rem;
+    letter-spacing: 0.2em;
+}
+
+#credits-scroll p {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    line-height: 1.8;
+}
+
+#credits-scroll .milestone {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 0.5rem 0;
+}
+
+#credits-scroll .year {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--saturn-gold);
+    min-width: 80px;
+}
+
+#credits-scroll .event {
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-secondary);
+    text-align: left;
+    max-width: 500px;
+}
+
+/* ============================================
+   PARTICLES & EFFECTS
+   ============================================ */
+
+.particle {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    animation: particleFade 2s ease-out forwards;
+}
+
+@keyframes particleFade {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0); }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .dossier-container {
+        padding: 1rem;
+    }
+
+    .dossier-stats {
+        grid-template-columns: 1fr;
+    }
+
+    #game-hud {
+        padding: 1rem;
+    }
+
+    .death-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.hidden {
+    display: none !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}

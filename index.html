@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jupiter's Moons - A Galileo Mission</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Title Screen -->
+        <div id="title-screen" class="screen active">
+            <div id="title-bg-canvas"></div>
+            <div class="title-content">
+                <h1 class="game-title">JUPITER'S MOONS</h1>
+                <p class="subtitle">A Galileo Mission</p>
+                <p class="developers">Developed by Jayden and Baraa</p>
+                <button id="play-btn" class="glow-btn">
+                    <span>PLAY</span>
+                </button>
+                <p class="press-space">PRESS SPACE OR CLICK TO START</p>
+            </div>
+        </div>
+
+        <!-- Cutscene Screen -->
+        <div id="cutscene-screen" class="screen">
+            <canvas id="cutscene-canvas"></canvas>
+            <div id="cutscene-text"></div>
+            <div id="cutscene-progress">
+                <p class="skip-hint">PRESS SPACE TO CONTINUE</p>
+            </div>
+            <div id="mission-control-box" class="hidden">
+                <div class="mc-header">
+                    <span class="mc-signal">▣ SIGNAL NOMINAL</span>
+                    <span class="mc-timestamp"></span>
+                </div>
+                <div class="mc-content"></div>
+            </div>
+        </div>
+
+        <!-- System Map Screen -->
+        <div id="map-screen" class="screen">
+            <canvas id="map-canvas"></canvas>
+            <div id="map-ui">
+                <h2>JUPITER SYSTEM</h2>
+                <div id="mission-progress"></div>
+            </div>
+        </div>
+
+        <!-- Dossier Screen -->
+        <div id="dossier-screen" class="screen">
+            <div class="dossier-container">
+                <div class="dossier-header">
+                    <span class="classified">MISSION BRIEFING</span>
+                    <span class="dossier-date"></span>
+                </div>
+                <div class="dossier-content">
+                    <h1 id="dossier-moon-name"></h1>
+                    <div class="dossier-stats">
+                        <div class="stat">
+                            <span class="stat-label">DESIGNATION</span>
+                            <span id="dossier-designation" class="stat-value"></span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">DISTANCE FROM JUPITER</span>
+                            <span id="dossier-distance" class="stat-value"></span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">SURFACE TEMPERATURE</span>
+                            <span id="dossier-temp" class="stat-value"></span>
+                        </div>
+                    </div>
+                    <div class="dossier-facts">
+                        <h3>SCIENTIFIC OBSERVATIONS</h3>
+                        <ul id="dossier-facts-list"></ul>
+                    </div>
+                    <div class="dossier-hazard">
+                        <h3>⚠ HAZARD WARNING</h3>
+                        <p id="dossier-hazard-text"></p>
+                    </div>
+                </div>
+                <button id="begin-mission-btn" class="glow-btn">
+                    <span>BEGIN MISSION</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <canvas id="level-canvas"></canvas>
+            <div id="game-hud">
+                <div class="hud-left">
+                    <span id="current-moon"></span>
+                </div>
+                <div class="hud-center">
+                    <div id="countdown" class="hidden">
+                        <span id="countdown-number">3</span>
+                    </div>
+                </div>
+                <div class="hud-right">
+                    <span id="distance-traveled">0 km</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Complete Screen -->
+        <div id="complete-screen" class="screen">
+            <div class="complete-container">
+                <div class="complete-checkmark">✓</div>
+                <h1>MISSION COMPLETE</h1>
+                <h2 id="complete-moon-name"></h2>
+                <p class="complete-subtitle">Survey Secured</p>
+                <div id="complete-particles"></div>
+            </div>
+        </div>
+
+        <!-- Death Screen -->
+        <div id="death-screen" class="screen">
+            <div class="death-overlay"></div>
+            <div class="death-container">
+                <div class="signal-lost">SIGNAL LOST</div>
+                <div class="death-static"></div>
+                <p id="death-fact" class="death-fact"></p>
+                <div class="death-buttons">
+                    <button id="retry-btn" class="glow-btn"><span>RETRY MISSION</span></button>
+                    <button id="abort-btn" class="glow-btn secondary"><span>ABORT TO MAP</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credits Screen -->
+        <div id="credits-screen" class="screen">
+            <div class="credits-content">
+                <div id="credits-scroll"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="cutscene.js"></script>
+    <script src="ui/transitions.js"></script>
+    <script src="ui/dossier.js"></script>
+    <script src="ui/deathscreen.js"></script>
+    <script src="levels/io.js"></script>
+    <script src="levels/europa.js"></script>
+    <script src="levels/ganymede.js"></script>
+    <script src="levels/callisto.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
