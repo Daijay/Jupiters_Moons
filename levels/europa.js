@@ -196,12 +196,17 @@ Mission Control out.`,
         const ctx = this.ctx;
         const canvas = this.canvas;
 
-        // Sky — very dark blue-black space
-        const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        skyGradient.addColorStop(0, '#020408');
-        skyGradient.addColorStop(0.5, '#060c14');
-        skyGradient.addColorStop(1, '#0a1420');
-        ctx.fillStyle = skyGradient;
+        // Real NASA Europa surface image as background
+        if (!GameImages.drawCover(ctx, 'europaSurface', 0, 0, canvas.width, canvas.height)) {
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGradient.addColorStop(0, '#020408');
+            skyGradient.addColorStop(0.5, '#060c14');
+            skyGradient.addColorStop(1, '#0a1420');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        // Dark overlay for gameplay readability
+        ctx.fillStyle = 'rgba(0, 5, 15, 0.3)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Stars
@@ -249,30 +254,6 @@ Mission Control out.`,
         ctx.beginPath();
         ctx.arc(jx, jy, jr * 1.6, 0, Math.PI * 2);
         ctx.fill();
-
-        // Background ice ridges
-        this.backgroundLayers.farIce.forEach(f => {
-            ctx.globalAlpha = f.opacity;
-            ctx.fillStyle = '#b8ccd8';
-            ctx.beginPath();
-            ctx.moveTo(f.x, this.groundY);
-            ctx.lineTo(f.x + f.width * 0.3, this.groundY - f.height);
-            ctx.lineTo(f.x + f.width * 0.7, this.groundY - f.height * 0.8);
-            ctx.lineTo(f.x + f.width, this.groundY);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-        });
-        this.backgroundLayers.midIce.forEach(f => {
-            ctx.globalAlpha = f.opacity;
-            ctx.fillStyle = '#c8dce8';
-            ctx.beginPath();
-            ctx.moveTo(f.x, this.groundY);
-            ctx.lineTo(f.x + f.width * 0.35, this.groundY - f.height);
-            ctx.lineTo(f.x + f.width * 0.65, this.groundY - f.height * 0.85);
-            ctx.lineTo(f.x + f.width, this.groundY);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-        });
 
         // Ground — bright icy surface
         const groundGrad = ctx.createLinearGradient(0, this.groundY, 0, canvas.height);

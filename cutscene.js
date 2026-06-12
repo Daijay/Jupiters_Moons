@@ -158,17 +158,12 @@ class CutsceneManager {
     }
 
     drawStarfield(time) {
-        this.ctx.fillStyle = '#0a0a0f';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        const gradient = this.ctx.createRadialGradient(
-            this.canvas.width * 0.7, this.canvas.height * 0.3, 0,
-            this.canvas.width * 0.7, this.canvas.height * 0.3, this.canvas.width * 0.5
-        );
-        gradient.addColorStop(0, 'rgba(80, 50, 20, 0.08)');
-        gradient.addColorStop(0.5, 'rgba(50, 30, 10, 0.04)');
-        gradient.addColorStop(1, 'transparent');
-        this.ctx.fillStyle = gradient;
+        // Real NASA nebula image as deep space background
+        if (!GameImages.drawCover(this.ctx, 'nebula', 0, 0, this.canvas.width, this.canvas.height)) {
+            this.ctx.fillStyle = '#0a0a0f';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+        this.ctx.fillStyle = 'rgba(0, 0, 10, 0.45)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.stars.forEach(star => {
@@ -655,24 +650,18 @@ class CutsceneManager {
                 duration: 5000,
                 text: "Each generation got closer. Each image raised more questions than it answered.",
                 render: (time, progress) => {
-                    this.drawStarfield(time);
                     const ctx = this.ctx;
-                    // Close-up of banded atmosphere
-                    const jy = this.canvas.height * 0.5;
-                    for (let i = 0; i < 12; i++) {
-                        const y = jy - 120 + i * 20;
-                        const brightness = 130 + Math.sin(i * 0.4 + time * 0.001) * 40;
-                        const alpha = 0.5 + Math.sin(i * 0.6) * 0.25;
-                        ctx.fillStyle = `rgba(${brightness + 40}, ${brightness + 20}, ${brightness - 20}, ${alpha})`;
-                        ctx.fillRect(0, y, this.canvas.width, 18);
-                    }
-                    // GRS hint
+                    // Real NASA Jupiter atmosphere image — zoomed in on cloud bands
+                    GameImages.drawCover(ctx, 'jupiterAtmos', 0, 0, this.canvas.width, this.canvas.height);
+                    ctx.fillStyle = `rgba(0, 0, 0, ${0.15 + progress * 0.1})`;
+                    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    // GRS hint glow on top of image
                     const grsGlow = ctx.createRadialGradient(
-                        this.canvas.width * 0.6, jy, 0,
-                        this.canvas.width * 0.6, jy, 80
+                        this.canvas.width * 0.6, this.canvas.height * 0.5, 0,
+                        this.canvas.width * 0.6, this.canvas.height * 0.5, 120
                     );
-                    grsGlow.addColorStop(0, 'rgba(180, 60, 30, 0.4)');
-                    grsGlow.addColorStop(0.5, 'rgba(140, 40, 20, 0.2)');
+                    grsGlow.addColorStop(0, 'rgba(180, 60, 30, 0.25)');
+                    grsGlow.addColorStop(0.5, 'rgba(140, 40, 20, 0.1)');
                     grsGlow.addColorStop(1, 'transparent');
                     ctx.fillStyle = grsGlow;
                     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -729,51 +718,39 @@ class CutsceneManager {
                 text: "October 18, 1989. Kennedy Space Center, Florida.",
                 render: (time, progress) => {
                     const ctx = this.ctx;
-                    ctx.fillStyle = '#080810';
+                    // Real NASA Galileo launch image — Atlantis carrying Galileo
+                    GameImages.drawCover(ctx, 'galileoLaunch', 0, 0, this.canvas.width, this.canvas.height);
+                    // Darken slightly, revealing more as scene progresses
+                    ctx.fillStyle = `rgba(0, 0, 5, ${0.45 - progress * 0.2})`;
                     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-                    this.stars.slice(0, 100).forEach(star => {
+                    // Animated shuttle rising over the image
+                    const rocketY = this.canvas.height * 0.52 - progress * this.canvas.height * 0.45;
+                    if (rocketY > -80) {
+                        ctx.fillStyle = 'rgba(220, 220, 220, 0.9)';
                         ctx.beginPath();
-                        ctx.arc(star.x, star.y * 0.6, star.size * 0.5, 0, Math.PI * 2);
-                        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness * 0.5})`;
+                        ctx.moveTo(this.canvas.width * 0.5, rocketY - 30);
+                        ctx.lineTo(this.canvas.width * 0.485, rocketY + 10);
+                        ctx.lineTo(this.canvas.width * 0.515, rocketY + 10);
+                        ctx.closePath();
                         ctx.fill();
-                    });
+                        ctx.fillRect(this.canvas.width * 0.484, rocketY + 10, 14, 45);
+                        ctx.fillStyle = 'rgba(200, 200, 200, 0.9)';
+                        ctx.fillRect(this.canvas.width * 0.473, rocketY + 5, 8, 38);
+                        ctx.fillRect(this.canvas.width * 0.519, rocketY + 5, 8, 38);
+                    }
 
-                    // Space shuttle silhouette on launch pad
-                    ctx.fillStyle = '#121220';
-                    ctx.beginPath();
-                    ctx.moveTo(this.canvas.width * 0.38, this.canvas.height);
-                    ctx.lineTo(this.canvas.width * 0.40, this.canvas.height * 0.52);
-                    ctx.lineTo(this.canvas.width * 0.60, this.canvas.height * 0.52);
-                    ctx.lineTo(this.canvas.width * 0.62, this.canvas.height);
-                    ctx.fill();
-
-                    // Shuttle body
-                    const rocketY = this.canvas.height * 0.52 - progress * this.canvas.height * 0.32;
-                    ctx.fillStyle = '#d8d8d8';
-                    ctx.beginPath();
-                    ctx.moveTo(this.canvas.width * 0.5, rocketY - 30);
-                    ctx.lineTo(this.canvas.width * 0.485, rocketY + 10);
-                    ctx.lineTo(this.canvas.width * 0.515, rocketY + 10);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.fillRect(this.canvas.width * 0.484, rocketY + 10, 14, 45);
-                    // Solid rocket boosters
-                    ctx.fillStyle = '#c8c8c8';
-                    ctx.fillRect(this.canvas.width * 0.473, rocketY + 5, 8, 38);
-                    ctx.fillRect(this.canvas.width * 0.519, rocketY + 5, 8, 38);
-
-                    // Exhaust
+                    // Engine exhaust glow
                     const exhaustGlow = ctx.createRadialGradient(
                         this.canvas.width * 0.5, rocketY + 60, 0,
-                        this.canvas.width * 0.5, rocketY + 60, 120 + progress * 60
+                        this.canvas.width * 0.5, rocketY + 60, 100 + progress * 80
                     );
-                    exhaustGlow.addColorStop(0, 'rgba(255, 210, 120, 0.9)');
-                    exhaustGlow.addColorStop(0.3, 'rgba(255, 150, 50, 0.6)');
-                    exhaustGlow.addColorStop(0.6, 'rgba(255, 100, 40, 0.3)');
+                    exhaustGlow.addColorStop(0, 'rgba(255, 210, 120, 0.85)');
+                    exhaustGlow.addColorStop(0.3, 'rgba(255, 150, 50, 0.5)');
+                    exhaustGlow.addColorStop(0.6, 'rgba(255, 100, 40, 0.25)');
                     exhaustGlow.addColorStop(1, 'transparent');
                     ctx.fillStyle = exhaustGlow;
-                    ctx.fillRect(this.canvas.width * 0.28, rocketY + 40, this.canvas.width * 0.44, 180);
+                    ctx.fillRect(this.canvas.width * 0.3, rocketY + 40, this.canvas.width * 0.4, 200);
                 }
             },
             {
@@ -974,41 +951,37 @@ class CutsceneManager {
                 duration: 8000,
                 text: "",
                 render: (time, progress) => {
-                    // MONEY SHOT — Jupiter erupts into frame
+                    // MONEY SHOT — real NASA Jupiter image erupts into frame
                     const ctx = this.ctx;
-                    ctx.fillStyle = '#0a0a0f';
+                    // Start dark, Jupiter zooms in
+                    const darkAlpha = Math.max(0, 0.8 - progress * 1.2);
+                    GameImages.drawCover(ctx, 'jupiterOrbit', 0, 0, this.canvas.width, this.canvas.height);
+                    ctx.fillStyle = `rgba(0, 0, 10, ${darkAlpha})`;
                     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-                    const scale = 0.5 + progress * 2;
-                    const jupiterRadius = Math.min(this.canvas.width, this.canvas.height) * 0.28 * scale;
-
-                    this.drawJupiter(
-                        this.canvas.width * 0.5,
-                        this.canvas.height * 0.5,
-                        jupiterRadius,
-                        time * 0.0004,
-                        true,
-                        1
-                    );
-
-                    const flareGlow = ctx.createRadialGradient(
-                        this.canvas.width * 0.3, this.canvas.height * 0.3, 0,
-                        this.canvas.width * 0.3, this.canvas.height * 0.3, 120
-                    );
-                    flareGlow.addColorStop(0, 'rgba(255, 210, 130, 0.3)');
-                    flareGlow.addColorStop(0.5, 'rgba(220, 180, 90, 0.1)');
-                    flareGlow.addColorStop(1, 'transparent');
-                    ctx.fillStyle = flareGlow;
-                    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    // Lens flare as Jupiter fills frame
+                    if (progress > 0.3) {
+                        const flareAlpha = (progress - 0.3) * 0.4;
+                        const flareGlow = ctx.createRadialGradient(
+                            this.canvas.width * 0.28, this.canvas.height * 0.25, 0,
+                            this.canvas.width * 0.28, this.canvas.height * 0.25, 150
+                        );
+                        flareGlow.addColorStop(0, `rgba(255, 220, 150, ${flareAlpha})`);
+                        flareGlow.addColorStop(0.5, `rgba(220, 180, 90, ${flareAlpha * 0.4})`);
+                        flareGlow.addColorStop(1, 'transparent');
+                        ctx.fillStyle = flareGlow;
+                        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    }
                 }
             },
             {
                 duration: 5000,
                 text: "December 7, 1995. After six years and 628 million kilometers, Galileo entered Jupiter's orbit.",
                 render: (time, progress) => {
-                    this.drawStarfield(time);
-                    const jupiterRadius = this.canvas.height * 0.38;
-                    this.drawJupiter(this.canvas.width * 0.5, this.canvas.height * 0.5, jupiterRadius, time * 0.0004, true, 1);
+                    // Real NASA Jupiter orbit image as background
+                    GameImages.drawCover(this.ctx, 'jupiterOrbit', 0, 0, this.canvas.width, this.canvas.height);
+                    this.ctx.fillStyle = 'rgba(0, 0, 10, 0.3)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
                     this.drawGalileo(
                         this.canvas.width * 0.28 + progress * 110,
@@ -1163,11 +1136,13 @@ class CutsceneManager {
             moonName: moonName,
             fact: fact,
             render: (time, progress) => {
-                this.drawStarfield(time);
                 const ctx = this.ctx;
-                ctx.fillStyle = 'rgba(0, 10, 0, 0.8)';
+                // Real NASA mission control room image
+                GameImages.drawCover(ctx, 'missionControl', 0, 0, this.canvas.width, this.canvas.height);
+                ctx.fillStyle = 'rgba(0, 8, 0, 0.65)';
                 ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                // CRT scanlines over image
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
                 for (let i = 0; i < this.canvas.height; i += 3) {
                     ctx.fillRect(0, i, this.canvas.width, 1);
                 }
@@ -1243,6 +1218,14 @@ class CutsceneManager {
         textElement.classList.remove('visible');
         mcBox.classList.remove('hidden');
 
+        // Apply real mission control room as background
+        const mcImg = GameImages.get('missionControl');
+        if (mcImg) {
+            mcBox.style.backgroundImage = `url('${mcImg.src}')`;
+            mcBox.style.backgroundSize = 'cover';
+            mcBox.style.backgroundPosition = 'center';
+        }
+
         const timestamp = document.querySelector('.mc-timestamp');
         const content = document.querySelector('.mc-content');
         timestamp.textContent = '[1995.341 // SIGNAL NOMINAL]';
@@ -1279,23 +1262,22 @@ Mission Control out.`;
         const duration = 4000;
         const minDuration = 1500;
 
+        // Moon portrait key mapping
+        const portraitKeys = { io: 'ioPortrait', europa: 'europaPortrait', ganymede: 'ganymedeFull', callisto: 'callistoPortrait' };
+        const portraitKey = portraitKeys[moonData.id] || 'nebula';
+
         await new Promise(resolve => {
             this.sceneResolve = resolve;
             const animate = () => {
                 const elapsed = performance.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                this.drawStarfield(performance.now());
+                // Real NASA moon portrait — zooms in as we approach
+                GameImages.drawCover(this.ctx, portraitKey, 0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = `rgba(0, 0, 15, ${0.6 - progress * 0.5})`;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-                const moonSize = 20 + progress * 150;
-                this.drawMoon(
-                    this.canvas.width * 0.5,
-                    this.canvas.height * 0.5,
-                    moonSize,
-                    moonData.id,
-                    performance.now()
-                );
-
+                // Keep Galileo probe flying across the frame
                 this.drawGalileo(
                     this.canvas.width * 0.2 + progress * this.canvas.width * 0.2,
                     this.canvas.height * 0.5 + Math.sin(progress * Math.PI) * 50,
@@ -1324,6 +1306,15 @@ Mission Control out.`;
 
         this.skipRequested = false;
         mcBox.classList.remove('hidden');
+
+        // Apply real mission control room as background
+        const mcImgArr = GameImages.get('missionControl');
+        if (mcImgArr) {
+            mcBox.style.backgroundImage = `url('${mcImgArr.src}')`;
+            mcBox.style.backgroundSize = 'cover';
+            mcBox.style.backgroundPosition = 'center';
+        }
+
         const timestamp = document.querySelector('.mc-timestamp');
         const content = document.querySelector('.mc-content');
         timestamp.textContent = `[JUPITER ORBIT // ${moonData.name.toUpperCase()} APPROACH]`;
@@ -1404,26 +1395,29 @@ Mission Control out.`;
                 duration: 7000,
                 text: "To protect Europa — a moon that may harbour life beneath its ice — NASA could not risk Galileo drifting and contaminating it.",
                 render: (time, progress) => {
-                    this.drawStarfield(time);
-                    // Europa visible and prominent
-                    this.drawMoon(
-                        this.canvas.width * 0.5,
-                        this.canvas.height * 0.4,
-                        80 + progress * 20,
-                        'europa',
-                        time
+                    // Real NASA Europa ocean image
+                    GameImages.drawCover(this.ctx, 'europaOcean', 0, 0, this.canvas.width, this.canvas.height);
+                    this.ctx.fillStyle = `rgba(0, 5, 20, ${0.4 - progress * 0.15})`;
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    // Keep Galileo probe entering frame
+                    this.drawGalileo(
+                        this.canvas.width * 0.12 + progress * this.canvas.width * 0.1,
+                        this.canvas.height * 0.25,
+                        1.2,
+                        0.3
                     );
-                    this.drawJupiter(this.canvas.width * 0.5, this.canvas.height * 0.85, 220, time * 0.0003, true, 0.5);
                 }
             },
             {
                 duration: 6000,
                 text: "Galileo transmitted data until the last possible second, then disintegrated in Jupiter's crushing atmosphere.",
                 render: (time, progress) => {
-                    this.drawStarfield(time);
-                    this.drawJupiter(this.canvas.width * 0.5, this.canvas.height * 0.55, 260, time * 0.0003, true, 0.85);
+                    const ctx = this.ctx;
+                    // Real NASA Jupiter atmosphere image — Galileo entering
+                    GameImages.drawCover(ctx, 'jupiterAtmos', 0, 0, this.canvas.width, this.canvas.height);
+                    ctx.fillStyle = `rgba(0, 0, 5, ${0.2 + progress * 0.1})`;
+                    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-                    // Galileo descending toward Jupiter
                     this.drawGalileo(
                         this.canvas.width * 0.22 + progress * this.canvas.width * 0.24,
                         this.canvas.height * 0.28 + progress * this.canvas.height * 0.18,
@@ -1437,9 +1431,10 @@ Mission Control out.`;
                 text: "In its final seconds, Galileo transmitted live data from inside Jupiter's atmosphere — composition readings no instrument had ever captured before.",
                 render: (time, progress) => {
                     const ctx = this.ctx;
-                    this.drawStarfield(time);
-
-                    this.drawJupiter(this.canvas.width * 0.5, this.canvas.height * 0.72, 420, time * 0.0003, true, 1);
+                    // Deep inside the atmosphere
+                    GameImages.drawCover(ctx, 'jupiterAtmos', 0, 0, this.canvas.width, this.canvas.height);
+                    ctx.fillStyle = `rgba(10, 5, 0, ${0.15 + progress * 0.2})`;
+                    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
                     if (progress > 0.25) {
                         const entryProgress = (progress - 0.25) / 0.75;
@@ -1447,8 +1442,8 @@ Mission Control out.`;
                             this.canvas.width * 0.46, this.canvas.height * 0.38, 0,
                             this.canvas.width * 0.46, this.canvas.height * 0.38, 55 + entryProgress * 55
                         );
-                        heatGlow.addColorStop(0, `rgba(255, 160, 50, ${entryProgress * 0.85})`);
-                        heatGlow.addColorStop(0.5, `rgba(255, 100, 40, ${entryProgress * 0.4})`);
+                        heatGlow.addColorStop(0, `rgba(255, 160, 50, ${entryProgress * 0.8})`);
+                        heatGlow.addColorStop(0.5, `rgba(255, 100, 40, ${entryProgress * 0.35})`);
                         heatGlow.addColorStop(1, 'transparent');
                         ctx.fillStyle = heatGlow;
                         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1468,8 +1463,10 @@ Mission Control out.`;
                 text: "Then the signal went silent.",
                 render: (time, progress) => {
                     const ctx = this.ctx;
-
-                    this.drawJupiter(this.canvas.width * 0.5, this.canvas.height * 0.82, 520, time * 0.0003, true, 1);
+                    // Atmosphere fills frame — the last view
+                    GameImages.drawCover(ctx, 'jupiterAtmos', 0, 0, this.canvas.width, this.canvas.height);
+                    ctx.fillStyle = `rgba(5, 3, 0, ${0.1 + progress * 0.5})`;
+                    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
                     // Disintegration debris
                     for (let i = 0; i < 50; i++) {

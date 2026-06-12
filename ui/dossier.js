@@ -15,6 +15,19 @@ class DossierManager {
     }
 
     displayMoonData(moonData) {
+        // Set real NASA moon portrait as dossier background
+        const portraitKeys = { io: 'ioPortrait', europa: 'europaPortrait', ganymede: 'ganymedeFull', callisto: 'callistoPortrait' };
+        const portraitKey = portraitKeys[moonData.id];
+        const dossierScreen = document.getElementById('dossier-screen');
+        if (portraitKey) {
+            const img = GameImages.get(portraitKey);
+            if (img) {
+                dossierScreen.style.backgroundImage = `url('${img.src}')`;
+                dossierScreen.style.backgroundSize = 'cover';
+                dossierScreen.style.backgroundPosition = 'center';
+            }
+        }
+
         const missionYears = {
             'io': '1995-2002',
             'europa': '1996-2000',

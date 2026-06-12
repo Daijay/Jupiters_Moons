@@ -204,12 +204,17 @@ Mission Control out.`,
         const ctx = this.ctx;
         const canvas = this.canvas;
 
-        // Sky — near-black with faint blue tint
-        const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        skyGrad.addColorStop(0, '#020205');
-        skyGrad.addColorStop(0.5, '#040810');
-        skyGrad.addColorStop(1, '#060d18');
-        ctx.fillStyle = skyGrad;
+        // Real NASA Ganymede surface image as background
+        if (!GameImages.drawCover(ctx, 'ganymedeSurface', 0, 0, canvas.width, canvas.height)) {
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, '#020205');
+            skyGrad.addColorStop(0.5, '#040810');
+            skyGrad.addColorStop(1, '#060d18');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        // Dark overlay for readability + preserve icy-grey mood
+        ctx.fillStyle = 'rgba(2, 4, 10, 0.35)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Stars
@@ -261,27 +266,6 @@ Mission Control out.`,
         ctx.ellipse(jx + jr * 0.1, jy + jr * 0.05, jr * 0.25, jr * 0.12, -0.1, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-
-        // Background dark ancient regions
-        this.backgroundLayers.darkRegions.forEach(r => {
-            ctx.globalAlpha = r.opacity;
-            ctx.fillStyle = '#282830';
-            ctx.fillRect(r.x, this.groundY - r.height, r.width, r.height + 5);
-            ctx.globalAlpha = 1;
-        });
-
-        // Background grooved ridges
-        this.backgroundLayers.ridgesBg.forEach(r => {
-            ctx.globalAlpha = r.opacity;
-            ctx.fillStyle = '#5a5a6a';
-            ctx.beginPath();
-            ctx.moveTo(r.x, this.groundY);
-            ctx.lineTo(r.x + r.width * 0.3, this.groundY - r.height);
-            ctx.lineTo(r.x + r.width * 0.7, this.groundY - r.height * 0.7);
-            ctx.lineTo(r.x + r.width, this.groundY);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-        });
 
         // Ground
         const groundGrad = ctx.createLinearGradient(0, this.groundY, 0, canvas.height);

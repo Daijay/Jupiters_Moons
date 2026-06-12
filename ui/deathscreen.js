@@ -14,6 +14,14 @@ class DeathScreenManager {
     }
 
     show(moonData, onRetry, onAbort) {
+        // Set real NASA space nebula as death screen background
+        const img = GameImages.get('nebula');
+        if (img) {
+            this.screen.style.backgroundImage = `url('${img.src}')`;
+            this.screen.style.backgroundSize = 'cover';
+            this.screen.style.backgroundPosition = 'center';
+        }
+
         // Display a random fact about the moon
         const randomFact = moonData.facts[Math.floor(Math.random() * moonData.facts.length)];
         this.factElement.textContent = `DID YOU KNOW? ${randomFact}`;

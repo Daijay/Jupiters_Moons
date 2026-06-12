@@ -169,13 +169,18 @@ Mission Control out.`,
         const canvas = this.canvas;
         const time = Date.now();
 
-        // Sky — deep volcanic darkness with orange glow at horizon
-        const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        skyGradient.addColorStop(0, '#070300');
-        skyGradient.addColorStop(0.5, '#140900');
-        skyGradient.addColorStop(0.85, '#2a1200');
-        skyGradient.addColorStop(1, '#3a1800');
-        ctx.fillStyle = skyGradient;
+        // Real NASA Io volcanic surface image as background
+        if (!GameImages.drawCover(ctx, 'ioVolcanoes', 0, 0, canvas.width, canvas.height)) {
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGradient.addColorStop(0, '#070300');
+            skyGradient.addColorStop(0.5, '#140900');
+            skyGradient.addColorStop(0.85, '#2a1200');
+            skyGradient.addColorStop(1, '#3a1800');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        // Dark overlay for gameplay readability + preserve volcanic mood
+        ctx.fillStyle = 'rgba(10, 5, 0, 0.35)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Jupiter in sky — massive presence
@@ -224,11 +229,6 @@ Mission Control out.`,
         horizonGlow.addColorStop(1, 'rgba(255, 60, 0, 0.35)');
         ctx.fillStyle = horizonGlow;
         ctx.fillRect(0, canvas.height * 0.6, canvas.width, canvas.height * 0.4);
-
-        // Background terrain layers
-        this.renderPlains(this.backgroundLayers.farPlains, '#1a1000', '#e06000', 0.3);
-        this.renderPlains(this.backgroundLayers.midPlains, '#2a1a00', '#c05000', 0.5);
-        this.renderPlains(this.backgroundLayers.nearPlains, '#3a2400', '#a04000', 0.8);
 
         // Ground
         const groundGrad = ctx.createLinearGradient(0, this.groundY, 0, canvas.height);

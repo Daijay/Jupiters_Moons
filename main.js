@@ -46,10 +46,11 @@ class Game {
         this.init();
     }
 
-    init() {
+    async init() {
         this.resize();
         window.addEventListener('resize', () => this.resize());
 
+        await GameImages.load();
         this.setupTitleScreen();
         this.setupEventListeners();
         this.gameLoop();
@@ -593,38 +594,14 @@ class Game {
         const canvas = this.titleCanvas;
         const time = Date.now();
 
-        // Deep space background
-        ctx.fillStyle = '#050508';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Animated nebula
+        // Real NASA nebula image — deep space background
         this.nebulaOffset += 0.0005;
-        const nebulaGradient1 = ctx.createRadialGradient(
-            canvas.width * 0.2 + Math.sin(this.nebulaOffset) * 50,
-            canvas.height * 0.3 + Math.cos(this.nebulaOffset * 0.7) * 30,
-            0,
-            canvas.width * 0.2,
-            canvas.height * 0.3,
-            canvas.width * 0.4
-        );
-        nebulaGradient1.addColorStop(0, 'rgba(80, 50, 20, 0.12)');
-        nebulaGradient1.addColorStop(0.5, 'rgba(60, 35, 10, 0.06)');
-        nebulaGradient1.addColorStop(1, 'transparent');
-        ctx.fillStyle = nebulaGradient1;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        const nebulaGradient2 = ctx.createRadialGradient(
-            canvas.width * 0.8 + Math.cos(this.nebulaOffset * 1.3) * 40,
-            canvas.height * 0.7 + Math.sin(this.nebulaOffset * 0.9) * 40,
-            0,
-            canvas.width * 0.8,
-            canvas.height * 0.7,
-            canvas.width * 0.35
-        );
-        nebulaGradient2.addColorStop(0, 'rgba(60, 40, 20, 0.1)');
-        nebulaGradient2.addColorStop(0.5, 'rgba(40, 25, 10, 0.05)');
-        nebulaGradient2.addColorStop(1, 'transparent');
-        ctx.fillStyle = nebulaGradient2;
+        if (!GameImages.drawCover(ctx, 'nebula', 0, 0, canvas.width, canvas.height)) {
+            ctx.fillStyle = '#050508';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        // Dark overlay to deepen space look and make stars visible
+        ctx.fillStyle = 'rgba(5, 5, 20, 0.3)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Stars
@@ -698,7 +675,7 @@ class Game {
         const jy = canvas.height * 0.58;
         const jRadius = 160 * this.jupiterScale;
 
-        // Outer glow
+        // Outer atmosphere glow
         for (let i = 3; i >= 0; i--) {
             const glowRadius = jRadius * (1.3 + i * 0.2);
             const glow = ctx.createRadialGradient(jx, jy, jRadius * 0.8, jx, jy, glowRadius);
@@ -711,67 +688,28 @@ class Game {
             ctx.fill();
         }
 
-        // Jupiter body
-        const bodyGradient = ctx.createRadialGradient(
-            jx - jRadius * 0.3, jy - jRadius * 0.2, 0,
-            jx, jy, jRadius
-        );
-        bodyGradient.addColorStop(0, '#f0e0c0');
-        bodyGradient.addColorStop(0.25, '#e0c898');
-        bodyGradient.addColorStop(0.5, '#c8a870');
-        bodyGradient.addColorStop(0.75, '#a07840');
-        bodyGradient.addColorStop(1, '#603010');
-
-        ctx.beginPath();
-        ctx.arc(jx, jy, jRadius, 0, Math.PI * 2);
-        ctx.fillStyle = bodyGradient;
-        ctx.fill();
-
-        // Atmospheric bands — the defining feature of Jupiter
+        // Real NASA Jupiter image — clipped to circle with breathing animation
         ctx.save();
         ctx.beginPath();
         ctx.arc(jx, jy, jRadius, 0, Math.PI * 2);
         ctx.clip();
-
-        const bandDefs = [
-            { offset: -0.85, width: 0.12, color: 'rgba(120, 70, 30, 0.55)' },
-            { offset: -0.70, width: 0.08, color: 'rgba(220, 185, 130, 0.3)' },
-            { offset: -0.55, width: 0.15, color: 'rgba(150, 90, 40, 0.5)' },
-            { offset: -0.35, width: 0.10, color: 'rgba(230, 195, 145, 0.25)' },
-            { offset: -0.18, width: 0.18, color: 'rgba(130, 75, 35, 0.45)' },  // NEB
-            { offset:  0.05, width: 0.10, color: 'rgba(215, 180, 125, 0.3)' },
-            { offset:  0.20, width: 0.20, color: 'rgba(145, 85, 40, 0.5)' },   // SEB
-            { offset:  0.45, width: 0.12, color: 'rgba(200, 165, 110, 0.3)' },
-            { offset:  0.60, width: 0.15, color: 'rgba(110, 60, 25, 0.4)' },
-            { offset:  0.80, width: 0.10, color: 'rgba(190, 155, 100, 0.25)' }
-        ];
-
-        bandDefs.forEach(band => {
-            const bandY = jy + jRadius * band.offset + Math.sin(this.bandOffset + band.offset * 5) * 3;
-            ctx.fillStyle = band.color;
-            ctx.fillRect(jx - jRadius, bandY, jRadius * 2, jRadius * band.width);
-        });
-
-        // Great Red Spot
-        const grsX = jx + Math.cos(this.jupiterAngle * 0.3) * jRadius * 0.15;
-        const grsY = jy + jRadius * 0.18;
-        const grsGrad = ctx.createRadialGradient(grsX, grsY, 0, grsX, grsY, jRadius * 0.22);
-        grsGrad.addColorStop(0, 'rgba(180, 60, 30, 0.75)');
-        grsGrad.addColorStop(0.5, 'rgba(160, 50, 25, 0.55)');
-        grsGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grsGrad;
-        ctx.beginPath();
-        ctx.ellipse(grsX, grsY, jRadius * 0.22, jRadius * 0.11, -0.15, 0, Math.PI * 2);
-        ctx.fill();
-
+        if (!GameImages.drawCover(ctx, 'jupiterOrbit', jx - jRadius, jy - jRadius, jRadius * 2, jRadius * 2)) {
+            // Fallback: canvas-drawn Jupiter
+            const bodyGradient = ctx.createRadialGradient(jx - jRadius * 0.3, jy - jRadius * 0.2, 0, jx, jy, jRadius);
+            bodyGradient.addColorStop(0, '#f0e0c0');
+            bodyGradient.addColorStop(0.5, '#c8a870');
+            bodyGradient.addColorStop(1, '#603010');
+            ctx.fillStyle = bodyGradient;
+            ctx.fillRect(jx - jRadius, jy - jRadius, jRadius * 2, jRadius * 2);
+        }
         ctx.restore();
 
-        // Atmosphere shimmer
+        // Atmosphere shimmer overlay on top of image
         const shimmer = ctx.createRadialGradient(
             jx - jRadius * 0.4, jy - jRadius * 0.3, 0,
             jx, jy, jRadius
         );
-        shimmer.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+        shimmer.addColorStop(0, 'rgba(255, 255, 255, 0.06)');
         shimmer.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
         shimmer.addColorStop(1, 'transparent');
         ctx.fillStyle = shimmer;
@@ -779,7 +717,7 @@ class Game {
         ctx.arc(jx, jy, jRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Faint rings (Jupiter has very thin rings — barely visible)
+        // Jupiter's faint ring system
         const ringOpacity = 0.15 + Math.sin(time * 0.001) * 0.03;
         ctx.save();
 

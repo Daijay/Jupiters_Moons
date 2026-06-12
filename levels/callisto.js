@@ -193,8 +193,13 @@ Mission Control out.`,
         const ctx = this.ctx;
         const canvas = this.canvas;
 
-        // Sky — absolute darkness
-        ctx.fillStyle = '#020202';
+        // Real NASA Callisto surface image as background
+        if (!GameImages.drawCover(ctx, 'callistoSurface', 0, 0, canvas.width, canvas.height)) {
+            ctx.fillStyle = '#020202';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        // Dark overlay for readability + preserve ancient dark mood
+        ctx.fillStyle = 'rgba(3, 2, 2, 0.4)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Stars — dim and sparse (Callisto is the most distant of the 4)
@@ -228,32 +233,6 @@ Mission Control out.`,
             ctx.fillRect(jx - jr, jy - jr + (jr * 2 / 4) * i, jr * 2, jr * 0.45);
         }
         ctx.restore();
-
-        // Background craters (far)
-        this.backgroundLayers.farCraters.forEach(c => {
-            ctx.globalAlpha = c.opacity;
-            ctx.strokeStyle = '#252525';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.ellipse(c.x, this.groundY - c.radius * 0.3, c.radius, c.radius * 0.3, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.fillStyle = '#1a1a1a';
-            ctx.beginPath();
-            ctx.ellipse(c.x, this.groundY - c.radius * 0.2, c.radius * 0.8, c.radius * 0.2, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-        });
-
-        // Background craters (mid)
-        this.backgroundLayers.midCraters.forEach(c => {
-            ctx.globalAlpha = c.opacity;
-            ctx.strokeStyle = '#303030';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.ellipse(c.x, this.groundY - c.radius * 0.2, c.radius, c.radius * 0.2, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.globalAlpha = 1;
-        });
 
         // Ground — dark, ancient, layered
         const groundGrad = ctx.createLinearGradient(0, this.groundY, 0, canvas.height);
