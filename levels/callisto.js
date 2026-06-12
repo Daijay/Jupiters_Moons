@@ -27,9 +27,9 @@ This is the last one. Complete the survey.
 
 Mission Control out.`,
 
-    baseSpeed: 6,
-    speedIncrement: 0.0006,
-    maxSpeed: 10,
+    baseSpeed: 5.5,
+    speedIncrement: 0.00042,
+    maxSpeed: 8.5,
     gravity: 0.35,
     jumpForce: -12,
 
@@ -52,7 +52,7 @@ Mission Control out.`,
         this.distance = 0;
         this.speed = this.baseSpeed;
         this.lastObstacle = 0;
-        this.obstacleInterval = 220;
+        this.obstacleInterval = 300;
         this.groundCurveOffset = 0;
     },
 
@@ -107,7 +107,7 @@ Mission Control out.`,
         if (this.distance - this.lastObstacle > this.obstacleInterval) {
             this.spawnObstacle();
             this.lastObstacle = this.distance;
-            this.obstacleInterval = 180 + Math.random() * 140;
+            this.obstacleInterval = 260 + Math.random() * 160;
         }
 
         this.obstacles = this.obstacles.filter(obs => {
@@ -153,37 +153,37 @@ Mission Control out.`,
 
     spawnObstacle() {
         const rand = Math.random();
-        if (rand < 0.55) {
-            // Crater pit gap — most common
+        if (rand < 0.50) {
+            // Crater pit gap — narrowed width
             this.obstacles.push({
                 type: 'crater_pit',
                 x: this.canvas.width + 50,
                 y: this.groundY,
-                width: 60 + Math.random() * 70,
+                width: 52 + Math.random() * 52,
                 height: 20,
                 dangerous: true
             });
-        } else if (rand < 0.75) {
-            // Crater rim wall
-            const h = 50 + Math.random() * 50;
+        } else if (rand < 0.78) {
+            // Crater rim wall — shorter
+            const h = 42 + Math.random() * 38;
             this.obstacles.push({
                 type: 'crater_rim',
                 x: this.canvas.width + 50,
                 y: this.groundY - h,
-                width: 28 + Math.random() * 22,
+                width: 24 + Math.random() * 18,
                 height: h,
                 dangerous: true
             });
         } else {
-            // Impact debris falling from above
+            // Impact debris — slower, smaller
             this.obstacles.push({
                 type: 'impact_debris',
-                x: this.canvas.width * 0.5 + Math.random() * this.canvas.width * 0.5,
+                x: this.canvas.width * 0.55 + Math.random() * this.canvas.width * 0.4,
                 y: -40,
-                width: 20 + Math.random() * 20,
-                height: 20 + Math.random() * 20,
-                vy: 2 + Math.random() * 2,
-                vx: -1 - Math.random() * 1.5,
+                width: 16 + Math.random() * 16,
+                height: 16 + Math.random() * 16,
+                vy: 1.5 + Math.random() * 1.5,
+                vx: -0.8 - Math.random() * 1.2,
                 dangerous: true
             });
         }

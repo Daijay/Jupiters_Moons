@@ -27,9 +27,9 @@ Watch for terrain ridges. The magnetic field generates pulse waves across the su
 
 Mission Control out.`,
 
-    baseSpeed: 5.5,
-    speedIncrement: 0.0004,
-    maxSpeed: 8,
+    baseSpeed: 5.2,
+    speedIncrement: 0.00032,
+    maxSpeed: 7.5,
     gravity: 0.35,
     jumpForce: -12,
 
@@ -52,7 +52,7 @@ Mission Control out.`,
         this.distance = 0;
         this.speed = this.baseSpeed;
         this.lastObstacle = 0;
-        this.obstacleInterval = 300;
+        this.obstacleInterval = 360;
         this.groundCurveOffset = 0;
         this.magneticTime = 0;
     },
@@ -121,7 +121,7 @@ Mission Control out.`,
         if (this.distance - this.lastObstacle > this.obstacleInterval) {
             this.spawnObstacle();
             this.lastObstacle = this.distance;
-            this.obstacleInterval = 260 + Math.random() * 200;
+            this.obstacleInterval = 320 + Math.random() * 220;
         }
 
         this.obstacles = this.obstacles.filter(obs => {
@@ -164,35 +164,35 @@ Mission Control out.`,
 
     spawnObstacle() {
         const rand = Math.random();
-        if (rand < 0.35) {
-            // Grooved terrain ridge
-            const h = 60 + Math.random() * 55;
+        if (rand < 0.38) {
+            // Grooved terrain ridge — slightly shorter
+            const h = 50 + Math.random() * 42;
             this.obstacles.push({
                 type: 'terrain_ridge',
                 x: this.canvas.width + 50,
                 y: this.groundY - h,
-                width: 30 + Math.random() * 25,
+                width: 28 + Math.random() * 20,
                 height: h,
                 dangerous: true
             });
-        } else if (rand < 0.65) {
-            // Crater pit gap
+        } else if (rand < 0.72) {
+            // Crater pit gap — narrower range
             this.obstacles.push({
                 type: 'crater_pit',
                 x: this.canvas.width + 50,
                 y: this.groundY,
-                width: 70 + Math.random() * 45,
+                width: 58 + Math.random() * 38,
                 height: 20,
                 dangerous: true
             });
         } else {
-            // Magnetic pulse wave — tall thin wall with blue glow
-            const h = 70 + Math.random() * 50;
+            // Magnetic pulse wave — slightly shorter, looser hitbox
+            const h = 55 + Math.random() * 40;
             this.obstacles.push({
                 type: 'magnetic_pulse',
                 x: this.canvas.width + 50,
                 y: this.groundY - h,
-                width: 12,
+                width: 10,
                 height: h,
                 pulseAge: 0,
                 dangerous: true
@@ -475,7 +475,7 @@ Mission Control out.`,
             return { x: obs.x + 4, y: obs.y, width: obs.width - 8, height: 50, isGap: true };
         }
         if (obs.type === 'magnetic_pulse') {
-            return { x: obs.x - 5, y: obs.y, width: obs.width + 10, height: obs.height };
+            return { x: obs.x, y: obs.y, width: obs.width, height: obs.height };
         }
         return { x: obs.x + 4, y: obs.y, width: obs.width - 8, height: obs.height };
     }

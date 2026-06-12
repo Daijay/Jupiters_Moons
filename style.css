@@ -124,9 +124,10 @@ canvas {
 .subtitle {
     font-family: 'Rajdhani', sans-serif;
     font-size: clamp(1rem, 3vw, 1.8rem);
-    font-weight: 300;
+    font-weight: 500;
     letter-spacing: 0.5em;
-    color: var(--text-secondary);
+    color: rgba(212, 168, 83, 0.92);
+    text-shadow: 0 0 18px rgba(212, 168, 83, 0.5), 0 0 40px rgba(212, 168, 83, 0.2);
     text-transform: uppercase;
     margin-bottom: 0.5rem;
 }
