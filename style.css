@@ -302,6 +302,24 @@ canvas {
     font-family: 'Space Mono', monospace;
     z-index: 20;
     box-shadow: 0 0 30px rgba(0, 255, 0, 0.2), inset 0 0 60px rgba(0, 255, 0, 0.05);
+    overflow: hidden;
+}
+
+/* Dark overlay sits on top of the background image, behind the text */
+#mission-control-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 4, 0, 0.88);
+    z-index: 0;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+/* All direct children need to sit above the overlay */
+#mission-control-box > * {
+    position: relative;
+    z-index: 1;
 }
 
 #mission-control-box.hidden {
@@ -317,9 +335,10 @@ canvas {
 }
 
 .mc-signal {
-    color: #00ff00;
+    color: #00ff41;
     font-size: 0.8rem;
     animation: signalBlink 1s infinite;
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.5);
 }
 
 @keyframes signalBlink {
@@ -328,16 +347,17 @@ canvas {
 }
 
 .mc-timestamp {
-    color: #00ff00;
+    color: #00ff41;
     font-size: 0.8rem;
-    opacity: 0.7;
+    opacity: 0.85;
 }
 
 .mc-content {
-    color: #00ff00;
+    color: #00ff41;
     font-size: 1rem;
     line-height: 1.6;
     white-space: pre-wrap;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
 }
 
 /* ============================================

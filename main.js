@@ -368,6 +368,11 @@ class Game {
         if (moonLabel && levelData) {
             moonLabel.textContent = levelData.name.toUpperCase();
         }
+        // Also update HUD moon name immediately so it's correct during countdown
+        const hudMoon = document.getElementById('current-moon');
+        if (hudMoon && levelData) {
+            hudMoon.textContent = levelData.name.toUpperCase();
+        }
 
         for (let i = 3; i >= 1; i--) {
             number.textContent = i;
