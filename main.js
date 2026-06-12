@@ -57,18 +57,28 @@ class Game {
     }
 
     resize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
         const screens = ['level-canvas', 'map-canvas', 'cutscene-canvas'];
         screens.forEach(id => {
             const canvas = document.getElementById(id);
             if (canvas) {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
+                canvas.width = w;
+                canvas.height = h;
             }
         });
 
         if (this.titleCanvas) {
-            this.titleCanvas.width = window.innerWidth;
-            this.titleCanvas.height = window.innerHeight;
+            this.titleCanvas.width = w;
+            this.titleCanvas.height = h;
+        }
+
+        // Re-init active level so groundY / layout recalculates
+        if (this.gameState === 'playing' && this.canvas && this.ctx) {
+            const level = this.levels[this.currentLevel];
+            level.init(this.canvas, this.ctx);
+            this.player.y = level.groundY - this.player.height;
         }
     }
 
@@ -102,6 +112,21 @@ class Game {
     }
 
     setupEventListeners() {
+        // Adapt UI copy for touch devices
+        const isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches || ('ontouchstart' in window);
+        if (isTouch) {
+            const pressSpace = document.querySelector('.press-space');
+            if (pressSpace) pressSpace.textContent = 'TAP TO START';
+            const skipHint = document.querySelector('.skip-hint');
+            if (skipHint) skipHint.textContent = 'TAP TO CONTINUE';
+        }
+
+        // Canvas resize on orientation change / window resize
+        window.addEventListener('resize', () => this.resize());
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => this.resize(), 150);
+        });
+
         document.getElementById('play-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             this.startGame();

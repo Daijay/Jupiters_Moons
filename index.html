@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0f">
     <title>Jupiter's Moons - A Galileo Mission</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
@@ -91,6 +95,7 @@
         <!-- Game Screen -->
         <div id="game-screen" class="screen">
             <canvas id="level-canvas"></canvas>
+            <div id="touch-jump-hint" class="touch-only">TAP TO JUMP</div>
             <div id="game-hud">
                 <div class="hud-left">
                     <span id="current-moon"></span>

@@ -24,6 +24,11 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    touch-action: manipulation;
 }
 
 body {
@@ -406,17 +411,34 @@ canvas {
     justify-content: center;
     align-items: center;
     padding: 2rem;
+    overflow-y: auto;
 }
 
 .dossier-container {
     width: 100%;
     max-width: 800px;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
     background: var(--panel-bg);
     border: 1px solid rgba(212, 168, 83, 0.3);
     border-radius: 8px;
     padding: 2rem;
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 168, 83, 0.1);
     animation: dossierSlideIn 0.8s ease-out;
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 168, 83, 0.4) transparent;
+}
+
+.dossier-container::-webkit-scrollbar {
+    width: 4px;
+}
+.dossier-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.dossier-container::-webkit-scrollbar-thumb {
+    background: rgba(212, 168, 83, 0.4);
+    border-radius: 2px;
 }
 
 @keyframes dossierSlideIn {
@@ -878,25 +900,410 @@ canvas {
 }
 
 /* ============================================
-   RESPONSIVE
+   TOUCH / MOBILE HINT
    ============================================ */
 
-@media (max-width: 768px) {
-    .dossier-container {
-        padding: 1rem;
+.touch-only {
+    display: none;
+}
+
+#touch-jump-hint {
+    position: absolute;
+    bottom: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: rgba(255, 255, 255, 0.35);
+    pointer-events: none;
+    z-index: 5;
+    animation: pressSpaceBlink 2s ease-in-out infinite;
+}
+
+/* ============================================
+   RESPONSIVE — TABLET (≤ 900px)
+   ============================================ */
+
+@media (max-width: 900px) {
+    #mission-control-box {
+        width: 94%;
+        bottom: 6%;
+        padding: 1.1rem 1.2rem;
+    }
+
+    .mc-content {
+        font-size: 0.88rem;
+        line-height: 1.55;
+    }
+
+    .mc-signal,
+    .mc-timestamp {
+        font-size: 0.72rem;
     }
 
     .dossier-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.7rem;
+    }
+}
+
+/* ============================================
+   RESPONSIVE — PHONE LANDSCAPE + SMALL TABLET (≤ 768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* Buttons — larger tap targets */
+    .glow-btn {
+        padding: 0.85rem 2rem;
+        font-size: 1rem;
+        min-height: 48px;
     }
 
-    #game-hud {
+    #begin-mission-btn {
         padding: 1rem;
+        font-size: 0.95rem;
+    }
+
+    /* Dossier — make scrollable on small screens */
+    #dossier-screen {
+        padding: 1rem;
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+
+    .dossier-container {
+        padding: 1.2rem;
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .dossier-content h1 {
+        font-size: clamp(1.6rem, 7vw, 2.8rem);
+        margin-bottom: 1rem;
+    }
+
+    .dossier-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .stat {
+        padding: 0.7rem 0.8rem;
+    }
+
+    .dossier-facts {
+        margin-bottom: 1.2rem;
+    }
+
+    #dossier-facts-list li {
+        font-size: 0.9rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .dossier-hazard {
+        padding: 0.8rem;
+        margin-bottom: 1.2rem;
+    }
+
+    #dossier-hazard-text {
+        font-size: 0.9rem;
+    }
+
+    /* Mission control */
+    #mission-control-box {
+        width: 96%;
+        bottom: 4%;
+        padding: 1rem;
+    }
+
+    .mc-content {
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    /* HUD */
+    #game-hud {
+        padding: 0.8rem 1rem;
+    }
+
+    .hud-left, .hud-right {
+        font-size: 0.75rem;
+    }
+
+    /* Countdown */
+    #countdown {
+        font-size: 5rem;
+    }
+
+    #countdown-moon-label {
+        font-size: 0.8rem;
+        letter-spacing: 0.2em;
+    }
+
+    /* Death screen */
+    .death-container {
+        padding: 1.8rem 1.5rem;
+        width: 90%;
+        max-width: 480px;
+    }
+
+    .death-static {
+        height: 60px;
+        margin-bottom: 1.2rem;
+    }
+
+    .death-fact {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 0.8rem 1rem;
     }
 
     .death-buttons {
         flex-direction: column;
         align-items: center;
+        gap: 0.7rem;
+    }
+
+    .death-buttons .glow-btn {
+        min-width: 240px;
+        width: 100%;
+    }
+
+    /* Complete screen */
+    .complete-checkmark {
+        font-size: 4rem;
+    }
+
+    /* Map UI */
+    #map-ui {
+        top: 1rem;
+        left: 1rem;
+    }
+
+    #map-ui h2 {
+        font-size: 1.1rem;
+    }
+
+    /* Credits */
+    #credits-scroll .milestone {
+        flex-direction: column;
+        gap: 0.2rem;
+        align-items: center;
+        margin-bottom: 0.8rem;
+    }
+
+    #credits-scroll .event {
+        text-align: center;
+        font-size: 0.9rem;
+    }
+}
+
+/* ============================================
+   RESPONSIVE — PHONE PORTRAIT (≤ 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+    /* Title */
+    .game-title {
+        font-size: clamp(2.2rem, 11vw, 4rem);
+        letter-spacing: 0.08em;
+    }
+
+    .subtitle {
+        font-size: clamp(0.75rem, 3.5vw, 1.1rem);
+        letter-spacing: 0.3em;
+    }
+
+    .developers {
+        font-size: clamp(0.7rem, 3vw, 0.95rem);
+        letter-spacing: 0.08em;
+        padding: 0.6rem 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .press-space {
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+    }
+
+    .glow-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Dossier single-column */
+    .dossier-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .dossier-header {
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Mission control — smaller font */
+    .mc-content {
+        font-size: 0.78rem;
+        line-height: 1.45;
+    }
+
+    .mc-header {
+        flex-direction: column;
+        gap: 0.2rem;
+        margin-bottom: 0.6rem;
+        padding-bottom: 0.4rem;
+    }
+
+    /* Countdown */
+    #countdown {
+        font-size: 4rem;
+    }
+
+    /* Death */
+    .signal-lost {
+        font-size: clamp(1.5rem, 8vw, 2.5rem);
+        letter-spacing: 0.15em;
+    }
+
+    .death-container {
+        padding: 1.4rem 1rem;
+    }
+
+    /* Show touch hint */
+    .touch-only {
+        display: block;
+    }
+}
+
+/* ============================================
+   RESPONSIVE — LANDSCAPE PHONE
+   (wide but very short — e.g. iPhone in landscape)
+   ============================================ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+    /* Title: side-by-side layout */
+    #title-screen {
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: 1rem 2rem;
+    }
+
+    .title-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .game-title {
+        font-size: clamp(1.8rem, 6vw, 3rem);
+        margin-bottom: 0.3rem;
+    }
+
+    .subtitle {
+        font-size: clamp(0.7rem, 2vw, 1rem);
+        margin-bottom: 0.3rem;
+    }
+
+    .developers {
+        font-size: clamp(0.65rem, 2vw, 0.9rem);
+        margin-bottom: 1rem;
+    }
+
+    /* Dossier: compact landscape */
+    #dossier-screen {
+        padding: 0.5rem 1rem;
+        overflow-y: auto;
+    }
+
+    .dossier-container {
+        padding: 0.8rem 1rem;
+    }
+
+    .dossier-content h1 {
+        font-size: clamp(1.4rem, 5vw, 2.2rem);
+        margin-bottom: 0.6rem;
+    }
+
+    .dossier-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .dossier-facts,
+    .dossier-hazard {
+        margin-bottom: 0.7rem;
+    }
+
+    #dossier-facts-list li {
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
+    }
+
+    /* Mission control: shorter box */
+    #mission-control-box {
+        bottom: 2%;
+        padding: 0.7rem 1rem;
+        max-height: 55vh;
+        overflow-y: auto;
+    }
+
+    .mc-content {
+        font-size: 0.78rem;
+        line-height: 1.4;
+    }
+
+    /* HUD compact */
+    #game-hud {
+        padding: 0.5rem 0.8rem;
+    }
+
+    /* Countdown smaller */
+    #countdown {
+        font-size: 3.5rem;
+    }
+
+    /* Death compact */
+    .death-container {
+        padding: 1rem 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        max-width: 90vw;
+    }
+
+    .signal-lost {
+        width: 100%;
+        font-size: clamp(1.2rem, 5vw, 2rem);
+        margin-bottom: 0.4rem;
+    }
+
+    .death-static {
+        height: 40px;
+        width: 100%;
+        margin-bottom: 0.6rem;
+    }
+
+    .death-fact {
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+        width: 100%;
+    }
+
+    .death-buttons {
+        flex-direction: row;
+    }
+
+    .death-buttons .glow-btn {
+        min-width: 160px;
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
     }
 }
 
