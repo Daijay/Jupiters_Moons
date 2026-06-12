@@ -362,6 +362,12 @@ class Game {
     async showCountdown() {
         const countdown = document.getElementById('countdown');
         const number = document.getElementById('countdown-number');
+        const moonLabel = document.getElementById('countdown-moon-label');
+        const levelData = this.levels[this.currentLevel];
+
+        if (moonLabel && levelData) {
+            moonLabel.textContent = levelData.name.toUpperCase();
+        }
 
         for (let i = 3; i >= 1; i--) {
             number.textContent = i;

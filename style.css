@@ -294,7 +294,7 @@ canvas {
     transform: translateX(-50%);
     width: 90%;
     max-width: 800px;
-    background: rgba(0, 20, 0, 0.9);
+    background: rgba(0, 8, 0, 0.97);
     border: 1px solid #00ff00;
     border-radius: 4px;
     padding: 1.5rem;
@@ -573,6 +573,20 @@ canvas {
     color: var(--saturn-gold);
     text-shadow: 0 0 60px rgba(212, 168, 83, 0.8);
     animation: countdownPulse 1s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+#countdown-moon-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 400;
+    color: rgba(212, 168, 83, 0.75);
+    text-shadow: 0 0 20px rgba(212, 168, 83, 0.5);
+    letter-spacing: 0.25em;
+    margin-top: 0.4rem;
 }
 
 @keyframes countdownPulse {

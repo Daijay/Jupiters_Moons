@@ -195,6 +195,7 @@ Mission Control out.`,
     render() {
         const ctx = this.ctx;
         const canvas = this.canvas;
+        const time = Date.now();
 
         // Real NASA Europa surface image as background
         if (!GameImages.drawCover(ctx, 'europaSurface', 0, 0, canvas.width, canvas.height)) {
